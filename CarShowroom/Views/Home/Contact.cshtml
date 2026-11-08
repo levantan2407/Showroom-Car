@@ -1,0 +1,98 @@
+@{
+    ViewData["Title"] = "Liên hệ với AutoCare Showroom";
+}
+
+<div class="bg-dark text-white py-5 mb-5" style="background: linear-gradient(135deg, var(--primary-navy), var(--navy-card));">
+    <div class="container text-center py-4">
+        <h1 class="fw-bold mb-2">Liên Hệ Chúng Tôi</h1>
+        <p class="text-white-50 max-w-700 mx-auto">Đội ngũ chuyên viên tư vấn AutoCare luôn sẵn sàng hỗ trợ bạn 24/7</p>
+    </div>
+</div>
+
+<div class="container mb-5">
+    <div class="row g-5">
+        <!-- Contact Information -->
+        <div class="col-lg-5">
+            <h3 class="fw-bold text-dark mb-4">Thông Tin Showroom</h3>
+            
+            <div class="d-flex align-items-start gap-3 mb-4">
+                <div class="p-3 bg-primary bg-opacity-10 text-primary rounded-circle fs-4">
+                    <i class="bi bi-geo-alt-fill"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold mb-1">Địa chỉ trụ sở chính</h6>
+                    <p class="text-muted mb-0">123 Nguyễn Văn Cừ, Phường 4, Quận 5, TP. Hồ Chí Minh</p>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-start gap-3 mb-4">
+                <div class="p-3 bg-success bg-opacity-10 text-success rounded-circle fs-4">
+                    <i class="bi bi-telephone-fill"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold mb-1">Hotline tư vấn & đặt hẹn</h6>
+                    <p class="text-muted mb-0"><strong>1800 6868</strong> (Miễn phí cuộc gọi)</p>
+                    <p class="text-muted mb-0">Kinh doanh: 0901 234 567</p>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-start gap-3 mb-4">
+                <div class="p-3 bg-warning bg-opacity-10 text-dark rounded-circle fs-4">
+                    <i class="bi bi-envelope-fill"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold mb-1">Thư điện tử</h6>
+                    <p class="text-muted mb-0">contact@autocare.com</p>
+                    <p class="text-muted mb-0">cskh@autocare.com</p>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-start gap-3 mb-4">
+                <div class="p-3 bg-info bg-opacity-10 text-info rounded-circle fs-4">
+                    <i class="bi bi-clock-fill"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold mb-1">Thời gian làm việc</h6>
+                    <p class="text-muted mb-0">Thứ Hai - Chủ Nhật: 08:00 - 20:00</p>
+                    <p class="text-muted mb-0">Xưởng dịch vụ: 08:00 - 17:30</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Form -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+                <h4 class="fw-bold text-dark mb-2">Gửi Yêu Cầu Tư Vấn</h4>
+                <p class="text-muted small mb-4">Điền thông tin bên dưới để chuyên viên liên hệ báo giá lăn bánh và lịch lái thử xe.</p>
+
+                <form asp-action="ContactSubmit" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Họ và tên <span class="text-danger">*</span></label>
+                            <input type="text" name="fullName" class="form-control" placeholder="Nguyễn Văn A" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Số điện thoại <span class="text-danger">*</span></label>
+                            <input type="tel" name="phone" class="form-control" placeholder="0901 234 567" required />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Địa chỉ Email</label>
+                            <input type="email" name="email" class="form-control" placeholder="example@email.com" />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Nội dung quan tâm <span class="text-danger">*</span></label>
+                            <textarea name="message" rows="4" class="form-control" placeholder="Tôi muốn nhận báo giá lăn bánh dòng xe Toyota Camry hoặc đăng ký lái thử..." required></textarea>
+                        </div>
+                        <div class="col-12 mt-4">
+                            <button type="submit" class="btn btn-gold btn-lg w-100 fw-bold shadow-sm">
+                                <i class="bi bi-send-fill me-1"></i> Gửi Yêu Cầu Tư Vấn
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+

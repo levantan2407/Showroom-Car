@@ -1,0 +1,112 @@
+@model List<CarShowroom.Models.WarrantyRequest>
+@{
+    ViewData["Title"] = "Yêu cầu bảo hành của tôi";
+}
+
+<div class="bg-dark text-white py-4 mb-4" style="background: linear-gradient(135deg, var(--primary-navy), var(--navy-card));">
+    <div class="container d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="fw-bold mb-1">Danh Sách Yêu Cầu Bảo Hành</h2>
+            <p class="text-white-50 mb-0 small">Theo dõi tiến trình tiếp nhận, chẩn đoán và khắc phục sự cố kỹ thuật</p>
+        </div>
+        <a asp-action="CreateRequest" class="btn btn-warning btn-sm fw-bold">
+            <i class="bi bi-plus-lg me-1"></i> Gửi yêu cầu mới
+        </a>
+    </div>
+</div>
+
+<div class="container mb-5">
+    @if (!Model.Any())
+    {
+        <div class="card border-0 shadow-sm rounded-4 text-center py-5 bg-white">
+            <div class="py-4">
+                <i class="bi bi-clipboard-check text-muted" style="font-size: 3.5rem;"></i>
+                <h5 class="fw-bold mt-3">Bạn chưa gửi yêu cầu bảo hành nào</h5>
+                <p class="text-muted small">Nếu xe của bạn phát sinh trục trặc kỹ thuật trong thời hạn bảo hành, hãy gửi yêu cầu để được hỗ trợ.</p>
+                <a asp-action="MyWarranties" class="btn btn-navy btn-sm mt-2">Xem xe sở hữu</a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Mã yêu cầu</th>
+                            <th>Xe yêu cầu</th>
+                            <th>Nội dung sự cố</th>
+                            <th>Ngày mong muốn</th>
+                            <th>Trạng thái</th>
+                            <th>Phản hồi / Kết quả</th>
+                            <th class="pe-4">Ngày gửi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var req in Model)
+                        {
+                            <tr>
+                                <td class="ps-4">
+                                    <strong class="text-primary">@req.RequestCode</strong>
+                                </td>
+                                <td>
+                                    <strong>@(req.Car?.Name ?? "Xe")</strong>
+                                    <small class="text-muted d-block font-monospace">@(req.Car?.VIN ?? "")</small>
+                                </td>
+                                <td>
+                                    <p class="mb-0 text-dark small" style="max-width: 250px;">@req.IssueDescription</p>
+                                </td>
+                                <td>
+                                    @(req.PreferredDate?.ToString("dd/MM/yyyy") ?? "---")
+                                </td>
+                                <td>
+                                    @switch (req.Status)
+                                    {
+                                        case WarrantyRequestStatus.ChoTiepNhan:
+                                            <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>Chờ tiếp nhận</span>
+                                            break;
+                                        case WarrantyRequestStatus.DaTiepNhan:
+                                            <span class="badge bg-info text-dark"><i class="bi bi-inbox me-1"></i>Đã tiếp nhận</span>
+                                            break;
+                                        case WarrantyRequestStatus.DangXuLy:
+                                            <span class="badge bg-primary"><i class="bi bi-gear-wide-connected me-1"></i>Đang xử lý</span>
+                                            break;
+                                        case WarrantyRequestStatus.HoanThanh:
+                                            <span class="badge bg-success"><i class="bi bi-check2-all me-1"></i>Hoàn thành</span>
+                                            break;
+                                        case WarrantyRequestStatus.TuChoi:
+                                            <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Từ chối</span>
+                                            break;
+                                    }
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(req.ResultNotes))
+                                    {
+                                        <small class="text-success fw-semibold">@req.ResultNotes</small>
+                                    }
+                                    else if (!string.IsNullOrEmpty(req.RejectReason))
+                                    {
+                                        <small class="text-danger">Từ chối: @req.RejectReason</small>
+                                    }
+                                    else if (!string.IsNullOrEmpty(req.AdminNotes))
+                                    {
+                                        <small class="text-dark">@req.AdminNotes</small>
+                                    }
+                                    else
+                                    {
+                                        <small class="text-muted">Đang chờ chuyên viên xem xét</small>
+                                    }
+                                </td>
+                                <td class="pe-4 small text-muted">
+                                    @req.CreatedAt.ToString("dd/MM/yyyy")
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+

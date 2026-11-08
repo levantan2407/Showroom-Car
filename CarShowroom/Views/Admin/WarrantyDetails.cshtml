@@ -1,0 +1,131 @@
+@model CarShowroom.Models.Warranty
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Hồ sơ bảo hành " + Model.WarrantyCode;
+    var remainingDays = (Model.EndDate - DateTime.Today).Days;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <a asp-action="Warranties" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách bảo hành
+    </a>
+    <span class="badge bg-light text-dark border p-2">Mã BH: @Model.WarrantyCode</span>
+</div>
+
+<div class="row g-4">
+    <!-- Left Column: Details -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+            <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
+                <h5 class="fw-bold text-dark mb-0">Hồ Sơ Bảo Hành Xe</h5>
+                <span class="badge @(remainingDays > 0 ? "bg-success" : "bg-danger") fs-6 px-3 py-2">
+                    @(remainingDays > 0 ? $"Còn hạn ({remainingDays} ngày)" : "Hết hạn")
+                </span>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <div class="col-md-6 border-end">
+                    <h6 class="fw-bold text-dark mb-2">Thông Tin Xe & Chủ Sở Hữu</h6>
+                    <ul class="list-unstyled small d-flex flex-column gap-2 mb-0">
+                        <li><strong class="text-muted">Tên xe:</strong> <span class="fw-bold text-dark">@(Model.Car?.Name)</span></li>
+                        <li><strong class="text-muted">Biển số:</strong> <span class="badge bg-light text-primary border">@(Model.VehicleOwnership?.LicensePlate ?? "Chưa cấp")</span></li>
+                        <li><strong class="text-muted">Số VIN:</strong> <span class="font-monospace">@(Model.Car?.VIN ?? "---")</span></li>
+                        <li><strong class="text-muted">Số khung:</strong> @(Model.Car?.ChassisNumber ?? "---")</li>
+                        <li><strong class="text-muted">Chủ sở hữu:</strong> <a asp-action="CustomerDetails" asp-route-id="@Model.CustomerId" class="fw-bold text-dark text-decoration-none">@(Model.Customer?.FullName)</a></li>
+                        <li><strong class="text-muted">Số điện thoại:</strong> @(Model.Customer?.PhoneNumber)</li>
+                    </ul>
+                </div>
+                <div class="col-md-6 ps-md-4">
+                    <h6 class="fw-bold text-dark mb-2">Thời Hạn & Điều Kiện</h6>
+                    <ul class="list-unstyled small d-flex flex-column gap-2 mb-0">
+                        <li><strong class="text-muted">Ngày bắt đầu:</strong> @Model.StartDate.ToString("dd/MM/yyyy")</li>
+                        <li><strong class="text-muted">Ngày kết thúc:</strong> @Model.EndDate.ToString("dd/MM/yyyy")</li>
+                        <li><strong class="text-muted">Tổng thời hạn:</strong> @Model.WarrantyPeriodMonths tháng</li>
+                        <li><strong class="text-muted">Trạng thái:</strong> <span class="badge bg-secondary">@Model.Status</span></li>
+                        <li><strong class="text-muted">Cập nhật lúc:</strong> @(Model.UpdatedAt?.ToString("dd/MM/yyyy HH:mm") ?? Model.CreatedAt.ToString("dd/MM/yyyy"))</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="p-3 bg-light rounded-3 small text-muted">
+                <strong class="text-dark d-block mb-1">Điều kiện bảo hành áp dụng:</strong>
+                @(string.IsNullOrEmpty(Model.Conditions) ? "Bảo hành chính hãng theo tiêu chuẩn của nhà sản xuất." : Model.Conditions)
+            </div>
+        </div>
+
+        <!-- Associated Requests -->
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+            <div class="p-3 bg-light border-bottom">
+                <h6 class="fw-bold text-dark mb-0"><i class="bi bi-tools text-danger me-2"></i>Lịch Sử Yêu Cầu Bảo Hành Của Xe Này (@Model.WarrantyRequests.Count)</h6>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 small">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Mã yêu cầu</th>
+                            <th>Nội dung sự cố</th>
+                            <th>Ngày gửi</th>
+                            <th>Trạng thái</th>
+                            <th class="text-end">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.WarrantyRequests.Any())
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center py-3 text-muted">Xe chưa phát sinh yêu cầu bảo hành nào.</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var r in Model.WarrantyRequests)
+                            {
+                                <tr>
+                                    <td><strong class="text-dark">@r.RequestCode</strong></td>
+                                    <td>@r.IssueDescription</td>
+                                    <td>@r.CreatedAt.ToString("dd/MM/yyyy")</td>
+                                    <td><span class="badge bg-secondary">@r.Status</span></td>
+                                    <td class="text-end">
+                                        <a asp-action="WarrantyRequestDetails" asp-route-id="@r.Id" class="btn btn-outline-dark btn-sm py-0">Xem xử lý</a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Extend Form -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <h6 class="fw-bold text-primary mb-2"><i class="bi bi-calendar-plus me-1"></i>Gia Hạn Bảo Hành</h6>
+            <p class="text-muted small">Cộng thêm thời hạn bảo hành khi có căn cứ nghiệp vụ hoặc khách hàng mua gói gia hạn.</p>
+
+            <form asp-action="WarrantyExtend" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-muted">Số tháng muốn gia hạn thêm</label>
+                    <select name="extendMonths" class="form-select">
+                        <option value="6">+6 Tháng</option>
+                        <option value="12" selected>+12 Tháng (1 Năm)</option>
+                        <option value="24">+24 Tháng (2 Năm)</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-muted">Ghi chú / Căn cứ gia hạn</label>
+                    <textarea name="conditions" rows="3" class="form-control form-control-sm" placeholder="Khách hàng mua thêm gói bảo hành mở rộng Gold Care...">@Model.Conditions</textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 fw-bold">
+                    <i class="bi bi-check-lg me-1"></i> Xác Nhận Gia Hạn
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+

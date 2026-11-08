@@ -1,0 +1,168 @@
+@model CarShowroom.ViewModels.AdminCarEditViewModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Thêm xe mới";
+}
+
+<div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+    <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
+        <div>
+            <h4 class="fw-bold text-dark mb-0"><i class="bi bi-plus-circle text-primary me-2"></i>Thêm Xe Mới Vào Showroom</h4>
+            <small class="text-muted">Nhập đầy đủ thông tin kỹ thuật và hình ảnh để hiển thị trên website</small>
+        </div>
+        <a asp-action="Cars" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách xe
+        </a>
+    </div>
+
+    <form asp-action="CarCreate" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small" role="alert"></div>
+
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label asp-for="Car.CarCode" class="form-label fw-semibold"></label>
+                <input asp-for="Car.CarCode" class="form-control" placeholder="Để trống để tự tạo (CAR-XXXX)" />
+                <span asp-validation-for="Car.CarCode" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="Car.Name" class="form-label fw-semibold"></label> <span class="text-danger">*</span>
+                <input asp-for="Car.Name" class="form-control" placeholder="Ví dụ: Toyota Camry 2.5Q" required />
+                <span asp-validation-for="Car.Name" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-3">
+                <label asp-for="Car.Version" class="form-label fw-semibold"></label>
+                <input asp-for="Car.Version" class="form-control" placeholder="Ví dụ: 2.5Q / RS / Premium" />
+                <span asp-validation-for="Car.Version" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-4">
+                <label asp-for="Car.BrandId" class="form-label fw-semibold"></label> <span class="text-danger">*</span>
+                <select asp-for="Car.BrandId" class="form-select" required>
+                    <option value="">-- Chọn hãng xe --</option>
+                    @foreach (var b in Model.Brands)
+                    {
+                        <option value="@b.Id">@b.Name</option>
+                    }
+                </select>
+                <span asp-validation-for="Car.BrandId" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-4">
+                <label asp-for="Car.CategoryId" class="form-label fw-semibold"></label> <span class="text-danger">*</span>
+                <select asp-for="Car.CategoryId" class="form-select" required>
+                    <option value="">-- Chọn loại xe --</option>
+                    @foreach (var c in Model.Categories)
+                    {
+                        <option value="@c.Id">@c.Name</option>
+                    }
+                </select>
+                <span asp-validation-for="Car.CategoryId" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-4">
+                <label asp-for="Car.ModelId" class="form-label fw-semibold"></label>
+                <select asp-for="Car.ModelId" class="form-select">
+                    <option value="">-- Chọn dòng xe (tùy chọn) --</option>
+                    @foreach (var m in Model.Models)
+                    {
+                        <option value="@m.Id">@m.Name (@m.Brand?.Name)</option>
+                    }
+                </select>
+                <span asp-validation-for="Car.ModelId" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-4">
+                <label asp-for="Car.Price" class="form-label fw-semibold"></label> (VNĐ) <span class="text-danger">*</span>
+                <input asp-for="Car.Price" type="number" class="form-control" placeholder="1405000000" required />
+                <span asp-validation-for="Car.Price" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-2">
+                <label asp-for="Car.Year" class="form-label fw-semibold"></label> <span class="text-danger">*</span>
+                <input asp-for="Car.Year" type="number" class="form-control" />
+                <span asp-validation-for="Car.Year" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-3">
+                <label asp-for="Car.Color" class="form-label fw-semibold"></label>
+                <input asp-for="Car.Color" class="form-control" placeholder="Đen / Trắng ngọc trai / Đỏ" />
+                <span asp-validation-for="Car.Color" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-3">
+                <label asp-for="Car.Status" class="form-label fw-semibold"></label> <span class="text-danger">*</span>
+                <select asp-for="Car.Status" class="form-select" asp-items="Html.GetEnumSelectList<CarStatus>()"></select>
+                <span asp-validation-for="Car.Status" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-3">
+                <label asp-for="Car.Seats" class="form-label fw-semibold"></label>
+                <input asp-for="Car.Seats" type="number" class="form-control" placeholder="5 hoặc 7" />
+                <span asp-validation-for="Car.Seats" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-3">
+                <label asp-for="Car.Transmission" class="form-label fw-semibold"></label>
+                <input asp-for="Car.Transmission" class="form-control" placeholder="Số tự động / Số sàn" />
+                <span asp-validation-for="Car.Transmission" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-3">
+                <label asp-for="Car.FuelType" class="form-label fw-semibold"></label>
+                <input asp-for="Car.FuelType" class="form-control" placeholder="Xăng / Dầu / Hybrid / Điện" />
+                <span asp-validation-for="Car.FuelType" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-3">
+                <label asp-for="Car.Engine" class="form-label fw-semibold"></label>
+                <input asp-for="Car.Engine" class="form-control" placeholder="2.5L 4 xi-lanh" />
+                <span asp-validation-for="Car.Engine" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-4">
+                <label asp-for="Car.VIN" class="form-label fw-semibold"></label>
+                <input asp-for="Car.VIN" class="form-control font-monospace" placeholder="Số khung chuẩn 17 ký tự" />
+                <span asp-validation-for="Car.VIN" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-4">
+                <label asp-for="Car.ChassisNumber" class="form-label fw-semibold"></label>
+                <input asp-for="Car.ChassisNumber" class="form-control" placeholder="Số khung nhà sản xuất" />
+                <span asp-validation-for="Car.ChassisNumber" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-4">
+                <label asp-for="Car.EngineNumber" class="form-label fw-semibold"></label>
+                <input asp-for="Car.EngineNumber" class="form-control" placeholder="Số máy động cơ" />
+                <span asp-validation-for="Car.EngineNumber" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="Car.ImageUrl" class="form-label fw-semibold">Đường dẫn ảnh trực tiếp (URL)</label>
+                <input asp-for="Car.ImageUrl" class="form-control" placeholder="https://..." />
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Hoặc Tải ảnh từ máy tính (Upload)</label>
+                <input asp-for="ImageFile" type="file" class="form-control" accept="image/*" />
+            </div>
+
+            <div class="col-12">
+                <label asp-for="Car.Description" class="form-label fw-semibold"></label>
+                <textarea asp-for="Car.Description" rows="4" class="form-control" placeholder="Mô tả các trang bị tiện nghi, an toàn, gói nội thất..."></textarea>
+                <span asp-validation-for="Car.Description" class="text-danger small"></span>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 pt-4 mt-3 border-top">
+            <a asp-action="Cars" class="btn btn-outline-secondary">Hủy bỏ</a>
+            <button type="submit" class="btn btn-primary fw-bold px-4">
+                <i class="bi bi-save me-1"></i> Lưu Thông Tin Xe
+            </button>
+        </div>
+    </form>
+</div>
+

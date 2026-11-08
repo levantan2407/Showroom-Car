@@ -1,0 +1,85 @@
+@model List<CarShowroom.Models.MaintenanceHistory>
+@{
+    ViewData["Title"] = "Lịch sử bảo dưỡng của tôi";
+}
+
+<div class="bg-dark text-white py-4 mb-4" style="background: linear-gradient(135deg, var(--primary-navy), var(--navy-card));">
+    <div class="container d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="fw-bold mb-1">Lịch Sử Bảo Dưỡng & Sửa Chữa</h2>
+            <p class="text-white-50 mb-0 small">Sổ bảo dưỡng điện tử ghi nhận toàn bộ dịch vụ đã thực hiện tại xưởng</p>
+        </div>
+        <a asp-action="Book" class="btn btn-gold btn-sm fw-bold">
+            <i class="bi bi-calendar-plus me-1"></i> Đặt lịch hẹn mới
+        </a>
+    </div>
+</div>
+
+<div class="container mb-5">
+    @if (!Model.Any())
+    {
+        <div class="card border-0 shadow-sm rounded-4 text-center py-5 bg-white">
+            <div class="py-4">
+                <i class="bi bi-clock-history text-muted" style="font-size: 3.5rem;"></i>
+                <h5 class="fw-bold mt-3">Chưa có lịch sử bảo dưỡng nào</h5>
+                <p class="text-muted small">Sau khi hoàn thành lần bảo dưỡng đầu tiên, chi tiết dịch vụ và chi phí sẽ được lưu trữ tại đây.</p>
+                <a asp-action="Book" class="btn btn-navy btn-sm mt-2">Đặt lịch bảo dưỡng ngay</a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Ngày thực hiện</th>
+                            <th>Xe thực hiện</th>
+                            <th>Nội dung công việc bảo dưỡng</th>
+                            <th>Chi phí dịch vụ</th>
+                            <th>Ghi chú kỹ thuật</th>
+                            <th class="pe-4 text-center">Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var h in Model)
+                        {
+                            <tr>
+                                <td class="ps-4">
+                                    <strong class="text-dark">@h.MaintenanceDate.ToString("dd/MM/yyyy")</strong>
+                                </td>
+                                <td>
+                                    <strong>@(h.Car?.Name ?? "Xe")</strong>
+                                    <small class="text-muted d-block">Mã: @(h.Car?.CarCode)</small>
+                                </td>
+                                <td>
+                                    <p class="mb-0 text-dark small" style="max-width: 320px;">@h.Content</p>
+                                </td>
+                                <td>
+                                    @if (h.Cost.HasValue)
+                                    {
+                                        <strong class="text-danger">@h.Cost.Value.ToString("N0") VNĐ</strong>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-light text-success border">Bảo hành miễn phí</span>
+                                    }
+                                </td>
+                                <td>
+                                    <small class="text-muted">@(string.IsNullOrEmpty(h.Notes) ? "---" : h.Notes)</small>
+                                </td>
+                                <td class="pe-4 text-center">
+                                    <span class="badge bg-success bg-opacity-10 text-success fw-bold px-3 py-2 rounded-pill">
+                                        <i class="bi bi-check2-circle me-1"></i>Đã hoàn thành
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+

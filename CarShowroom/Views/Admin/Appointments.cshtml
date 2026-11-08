@@ -1,0 +1,221 @@
+@model List<CarShowroom.Models.MaintenanceAppointment>
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Quản lý lịch bảo dưỡng";
+    int currentPage = ViewBag.CurrentPage;
+    int totalPages = ViewBag.TotalPages;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h4 class="fw-bold text-dark mb-0"><i class="bi bi-calendar-check text-primary me-2"></i>Lịch Hẹn Bảo Dưỡng</h4>
+        <small class="text-muted">Tổng cộng: @ViewBag.TotalItems lịch hẹn</small>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white">
+    <form method="get" asp-action="Appointments">
+        <div class="row g-2">
+            <div class="col-md-9">
+                <select name="status" class="form-select form-select-sm">
+                    <option value="">Tất cả trạng thái lịch hẹn</option>
+                    <option value="0" selected="@(ViewBag.Status != null && (int)ViewBag.Status == 0)">Chờ xác nhận</option>
+                    <option value="1" selected="@(ViewBag.Status != null && (int)ViewBag.Status == 1)">Đã xác nhận</option>
+                    <option value="2" selected="@(ViewBag.Status != null && (int)ViewBag.Status == 2)">Đang thực hiện</option>
+                    <option value="3" selected="@(ViewBag.Status != null && (int)ViewBag.Status == 3)">Hoàn thành</option>
+                    <option value="4" selected="@(ViewBag.Status != null && (int)ViewBag.Status == 4)">Từ chối</option>
+                    <option value="5" selected="@(ViewBag.Status != null && (int)ViewBag.Status == 5)">Đã hủy</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-secondary btn-sm flex-grow-1"><i class="bi bi-funnel"></i> Lọc</button>
+                <a asp-action="Appointments" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-counterclockwise"></i></a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-3">Mã lịch</th>
+                    <th>Khách hàng</th>
+                    <th>Xe bảo dưỡng</th>
+                    <th>Ngày & Giờ hẹn</th>
+                    <th>Nội dung yêu cầu</th>
+                    <th>Chi phí thực tế</th>
+                    <th>Trạng thái</th>
+                    <th class="text-end pe-3">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="8" class="text-center py-4 text-muted">Không tìm thấy lịch hẹn nào.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var a in Model)
+                    {
+                        <tr>
+                            <td class="ps-3"><strong class="text-dark">@a.AppointmentCode</strong></td>
+                            <td>
+                                <div><strong>@(a.Customer?.FullName ?? "---")</strong></div>
+                                <small class="text-muted">@(a.Customer?.PhoneNumber)</small>
+                            </td>
+                            <td>
+                                <strong>@(a.Car?.Name ?? "Xe")</strong>
+                                <small class="text-muted d-block">Mã: @(a.Car?.CarCode)</small>
+                            </td>
+                            <td>
+                                <div><strong>@a.AppointmentDate.ToString("dd/MM/yyyy")</strong></div>
+                                <small class="text-muted">@a.TimeSlot</small>
+                            </td>
+                            <td>
+                                <p class="mb-0 text-dark small" style="max-width: 250px;">@a.Content</p>
+                            </td>
+                            <td>
+                                @if (a.ActualCost.HasValue)
+                                {
+                                    <strong class="text-danger">@a.ActualCost.Value.ToString("N0") VNĐ</strong>
+                                }
+                                else if (a.EstimatedCost.HasValue)
+                                {
+                                    <span class="text-muted small">Ước tính: @a.EstimatedCost.Value.ToString("N0") VNĐ</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">Chưa có</span>
+                                }
+                            </td>
+                            <td>
+                                @switch (a.Status)
+                                {
+                                    case AppointmentStatus.ChoXacNhan:
+                                        <span class="badge bg-warning text-dark">Chờ xác nhận</span>
+                                        break;
+                                    case AppointmentStatus.DaXacNhan:
+                                        <span class="badge bg-info text-dark">Đã xác nhận</span>
+                                        break;
+                                    case AppointmentStatus.DangThucHien:
+                                        <span class="badge bg-primary">Đang thực hiện</span>
+                                        break;
+                                    case AppointmentStatus.HoanThanh:
+                                        <span class="badge bg-success">Hoàn thành</span>
+                                        break;
+                                    case AppointmentStatus.TuChoi:
+                                        <span class="badge bg-danger">Từ chối</span>
+                                        break;
+                                    case AppointmentStatus.DaHuy:
+                                        <span class="badge bg-secondary">Đã hủy</span>
+                                        break;
+                                }
+                            </td>
+                            <td class="text-end pe-3">
+                                @if (a.Status == AppointmentStatus.ChoXacNhan)
+                                {
+                                    <button class="btn btn-success btn-sm py-0" data-bs-toggle="modal" data-bs-target="#confirmModal_@a.Id">
+                                        <i class="bi bi-check2"></i> Xác nhận
+                                    </button>
+                                }
+                                else if (a.Status == AppointmentStatus.DaXacNhan || a.Status == AppointmentStatus.DangThucHien)
+                                {
+                                    <button class="btn btn-primary btn-sm py-0" data-bs-toggle="modal" data-bs-target="#completeModal_@a.Id">
+                                        <i class="bi bi-check2-all"></i> Hoàn thành
+                                    </button>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">---</span>
+                                }
+                            </td>
+                        </tr>
+
+                        <!-- Modal Confirm Appointment -->
+                        <div class="modal fade" id="confirmModal_@a.Id" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content rounded-4 border-0">
+                                    <form asp-action="AppointmentConfirm" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@a.Id" />
+                                        <div class="modal-header bg-dark text-white">
+                                            <h5 class="modal-title fw-bold">Xác Nhận Lịch Hẹn @a.AppointmentCode</h5>
+                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body p-4">
+                                            <p class="small text-muted mb-3">Xác nhận ngày tiếp nhận: <strong>@a.AppointmentDate.ToString("dd/MM/yyyy") (@a.TimeSlot)</strong> cho khách hàng <strong>@(a.Customer?.FullName)</strong></p>
+                                            <div class="mb-3">
+                                                <label class="form-label small fw-semibold">Chi phí ước tính (VNĐ)</label>
+                                                <input type="number" name="estimatedCost" class="form-control" placeholder="Ví dụ: 1500000" />
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label small fw-semibold">Ghi chú xác nhận</label>
+                                                <input type="text" name="adminNotes" class="form-control" placeholder="Đã xếp khoang số 2, cố vấn dịch vụ A tiếp đón..." />
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
+                                            <button type="submit" class="btn btn-success fw-bold">Xác Nhận Lịch Hẹn</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Modal Complete Appointment -->
+                        <div class="modal fade" id="completeModal_@a.Id" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content rounded-4 border-0">
+                                    <form asp-action="AppointmentComplete" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@a.Id" />
+                                        <div class="modal-header bg-success text-white">
+                                            <h5 class="modal-title fw-bold"><i class="bi bi-check2-circle me-1"></i>Hoàn Thành Bảo Dưỡng</h5>
+                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body p-4">
+                                            <div class="alert alert-info small border-0 mb-3">
+                                                Hệ thống sẽ cập nhật trạng thái lịch hẹn thành <strong>Hoàn thành</strong> và <strong>tự động tạo một bản ghi lịch sử bảo dưỡng</strong> vào hồ sơ chiếc xe này.
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label small fw-semibold">Chi phí thực tế (VNĐ) <span class="text-danger">*</span></label>
+                                                <input type="number" name="actualCost" value="@(a.EstimatedCost ?? 0)" class="form-control" required />
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label small fw-semibold">Ghi chú kỹ thuật hoàn tất</label>
+                                                <textarea name="notes" rows="3" class="form-control" placeholder="Đã hoàn tất thay dầu nhớt động cơ, lọc gió, kiểm tra ắc quy và siết lực ốc bánh xe chuẩn tiêu chuẩn.">@a.AdminNotes</textarea>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
+                                            <button type="submit" class="btn btn-success fw-bold">Hoàn Tất & Lưu Lịch Sử</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@if (totalPages > 1)
+{
+    <nav class="d-flex justify-content-center mt-4">
+        <ul class="pagination pagination-sm shadow-sm">
+            @for (int i = 1; i <= totalPages; i++)
+            {
+                <li class="page-item @(currentPage == i ? "active" : "")">
+                    <a class="page-link" asp-action="Appointments" asp-route-page="@i" asp-route-status="@ViewBag.Status">@i</a>
+                </li>
+            }
+        </ul>
+    </nav>
+}
+

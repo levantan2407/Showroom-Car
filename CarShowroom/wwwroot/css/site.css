@@ -1,0 +1,390 @@
+/* Google Fonts & Root CSS Variables */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+    --primary-navy: #0b132b;
+    --navy-card: #1c2541;
+    --navy-light: #3a506b;
+    --accent-blue: #0077b6;
+    --accent-blue-hover: #0096c7;
+    --accent-gold: #ffb703;
+    --accent-gold-hover: #fb8500;
+    --text-main: #212529;
+    --text-muted: #6c757d;
+    --bg-light: #f8f9fa;
+    --card-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+    --hover-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+    --border-radius: 12px;
+}
+
+body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--text-main);
+    background-color: #fdfdfd;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Brand Logo Text */
+.navbar-brand-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 800;
+    font-size: 1.35rem;
+    letter-spacing: -0.5px;
+    color: #fff !important;
+    text-decoration: none;
+}
+.navbar-brand-logo .logo-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-hover));
+    color: var(--primary-navy);
+    border-radius: 8px;
+    font-size: 1.2rem;
+}
+.navbar-brand-logo span.accent {
+    color: var(--accent-gold);
+}
+
+/* Public Navbar */
+.navbar-custom {
+    background-color: var(--primary-navy) !important;
+    border-bottom: 2px solid rgba(255, 183, 3, 0.25);
+    padding: 0.75rem 0;
+    box-shadow: 0 4px 20px rgba(11, 19, 43, 0.15);
+}
+.navbar-custom .nav-link {
+    color: rgba(255, 255, 255, 0.85) !important;
+    font-weight: 500;
+    padding: 0.5rem 1rem !important;
+    border-radius: 6px;
+    transition: all 0.25s ease;
+}
+.navbar-custom .nav-link:hover,
+.navbar-custom .nav-link.active {
+    color: #fff !important;
+    background-color: rgba(255, 255, 255, 0.08);
+}
+.navbar-custom .nav-link.active {
+    color: var(--accent-gold) !important;
+    font-weight: 600;
+}
+
+/* Hero Section */
+.hero-banner {
+    position: relative;
+    background: linear-gradient(135deg, rgba(11, 19, 43, 0.92) 0%, rgba(28, 37, 65, 0.85) 100%),
+                url('https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
+    color: #fff;
+    padding: 100px 0 90px 0;
+    border-radius: 0 0 24px 24px;
+    overflow: hidden;
+}
+.hero-title {
+    font-size: 3rem;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 1.25rem;
+}
+.hero-subtitle {
+    font-size: 1.15rem;
+    color: rgba(255, 255, 255, 0.85);
+    line-height: 1.6;
+    margin-bottom: 2rem;
+}
+
+/* Car Cards */
+.car-card {
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.07);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    box-shadow: var(--card-shadow);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+.car-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--hover-shadow);
+}
+.car-img-wrapper {
+    position: relative;
+    width: 100%;
+    height: 220px;
+    background-color: #f1f3f5;
+    overflow: hidden;
+}
+.car-img-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+.car-card:hover .car-img-wrapper img {
+    transform: scale(1.05);
+}
+.car-badge-status {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.car-badge-brand {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    background: rgba(11, 19, 43, 0.85);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 6px;
+    backdrop-filter: blur(4px);
+}
+.car-card-body {
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+.car-name {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--primary-navy);
+    margin-bottom: 0.5rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.car-price {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #d90429;
+    margin-bottom: 0.75rem;
+}
+.car-spec-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 1rem;
+    font-size: 0.825rem;
+    color: var(--text-muted);
+}
+.car-spec-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.car-spec-item i {
+    color: var(--accent-blue);
+}
+
+/* Brand Chips Carousel / Grid */
+.brand-card {
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 12px;
+    padding: 1.25rem 1rem;
+    text-align: center;
+    transition: all 0.25s ease;
+    text-decoration: none;
+    color: var(--primary-navy);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    display: block;
+}
+.brand-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--accent-gold);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    color: var(--accent-blue);
+}
+.brand-card .brand-name {
+    font-weight: 700;
+    font-size: 1rem;
+    margin-top: 6px;
+}
+
+/* Custom Buttons */
+.btn-gold {
+    background-color: var(--accent-gold);
+    color: var(--primary-navy);
+    font-weight: 700;
+    border: none;
+    padding: 0.65rem 1.4rem;
+    border-radius: 8px;
+    transition: all 0.25s ease;
+}
+.btn-gold:hover {
+    background-color: var(--accent-gold-hover);
+    color: var(--primary-navy);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(251, 133, 0, 0.3);
+}
+
+.btn-navy {
+    background-color: var(--primary-navy);
+    color: #fff;
+    font-weight: 600;
+    border: none;
+    padding: 0.65rem 1.4rem;
+    border-radius: 8px;
+    transition: all 0.25s ease;
+}
+.btn-navy:hover {
+    background-color: var(--navy-card);
+    color: #fff;
+}
+
+/* Admin Sidebar Layout */
+.admin-wrapper {
+    display: flex;
+    min-height: 100vh;
+}
+.admin-sidebar {
+    width: 270px;
+    background: var(--primary-navy);
+    color: #fff;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.05);
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+.admin-sidebar-header {
+    padding: 1.5rem 1.25rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.admin-sidebar-menu {
+    padding: 1rem 0.75rem;
+    list-style: none;
+    margin: 0;
+    flex-grow: 1;
+    overflow-y: auto;
+}
+.admin-menu-item {
+    margin-bottom: 4px;
+}
+.admin-menu-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0.65rem 1rem;
+    color: rgba(255, 255, 255, 0.75);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+.admin-menu-link i {
+    font-size: 1.1rem;
+    width: 20px;
+    text-align: center;
+}
+.admin-menu-link:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+}
+.admin-menu-link.active {
+    background: linear-gradient(90deg, var(--accent-blue), #0096c7);
+    color: #fff;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0, 119, 182, 0.3);
+}
+.admin-sidebar-footer {
+    padding: 1rem 1.25rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.admin-content {
+    flex-grow: 1;
+    background: #f4f6f9;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+.admin-header {
+    background: #fff;
+    padding: 0.85rem 1.5rem;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Stat Cards */
+.stat-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    transition: transform 0.2s ease;
+}
+.stat-card:hover {
+    transform: translateY(-3px);
+}
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+/* Footer */
+.footer-custom {
+    background-color: var(--primary-navy);
+    color: rgba(255, 255, 255, 0.7);
+    padding: 60px 0 25px 0;
+    margin-top: auto;
+    border-top: 3px solid var(--accent-gold);
+}
+.footer-custom h5 {
+    color: #fff;
+    font-weight: 700;
+    margin-bottom: 1.25rem;
+    font-size: 1.05rem;
+}
+.footer-custom a {
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+.footer-custom a:hover {
+    color: var(--accent-gold);
+}
+.footer-custom ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.footer-custom ul li {
+    margin-bottom: 0.6rem;
+}
+
+/* Badges */
+.badge-status-available { background-color: #2ec4b6; color: #fff; }
+.badge-status-sold { background-color: #e63946; color: #fff; }
+.badge-status-deposit { background-color: #ff9f1c; color: #fff; }
+.badge-status-stopped { background-color: #6c757d; color: #fff; }

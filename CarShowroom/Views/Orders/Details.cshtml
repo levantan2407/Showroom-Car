@@ -1,0 +1,186 @@
+@model CarShowroom.Models.Order
+@{
+    ViewData["Title"] = "Chi tiết đơn đăng ký " + Model.OrderCode;
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <a asp-action="MyOrders" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i> Danh sách đơn của tôi
+                </a>
+                <span class="badge bg-light text-dark border p-2">Mã đơn: @Model.OrderCode</span>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+                <div class="bg-dark text-white p-4" style="background: linear-gradient(135deg, var(--primary-navy), var(--navy-card));">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <div>
+                            <h4 class="fw-bold mb-1">Chi Tiết Đơn Đăng Ký Mua Xe</h4>
+                            <p class="text-white-50 small mb-0">Ngày gửi: @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</p>
+                        </div>
+                        <div>
+                            @switch (Model.Status)
+                            {
+                                case OrderStatus.ChoXacNhan:
+                                    <span class="badge bg-warning text-dark fs-6 px-3 py-2">Chờ xác nhận</span>
+                                    break;
+                                case OrderStatus.DaLienHe:
+                                    <span class="badge bg-info text-dark fs-6 px-3 py-2">Đã liên hệ</span>
+                                    break;
+                                case OrderStatus.DaXacNhan:
+                                    <span class="badge bg-primary fs-6 px-3 py-2">Đã xác nhận</span>
+                                    break;
+                                case OrderStatus.DangHoanTat:
+                                    <span class="badge bg-secondary fs-6 px-3 py-2">Đang làm thủ tục</span>
+                                    break;
+                                case OrderStatus.DaHoanThanh:
+                                    <span class="badge bg-success fs-6 px-3 py-2">Đã hoàn thành</span>
+                                    break;
+                                case OrderStatus.DaHuy:
+                                    <span class="badge bg-danger fs-6 px-3 py-2">Đã hủy</span>
+                                    break;
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+                    @if (Model.IsCancelRequested && Model.Status != OrderStatus.DaHuy)
+                    {
+                        <div class="alert alert-warning border-0 rounded-3 shadow-sm p-3 mb-4">
+                            <div class="d-flex align-items-start gap-3">
+                                <i class="bi bi-exclamation-triangle-fill text-warning fs-3 mt-1"></i>
+                                <div>
+                                    <h6 class="fw-bold mb-1 text-dark">Bạn đã gửi yêu cầu hủy đơn hàng này</h6>
+                                    <p class="mb-1 text-dark small"><strong>Lý do bạn đã gửi:</strong> @Model.CancelRequestReason</p>
+                                    <p class="mb-0 text-muted small">
+                                        Thời gian gửi: @(Model.CancelRequestedAt?.ToString("dd/MM/yyyy HH:mm") ?? "Gần đây"). Đơn hàng vẫn giữ trạng thái <strong>Chờ xác nhận</strong> và sẽ chính thức hủy khi Quản trị viên (Admin) xem xét và đồng ý xác nhận.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    <!-- Car Info -->
+                    <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">Thông Tin Xe Đăng Ký</h5>
+                    <div class="card bg-light border-0 rounded-3 p-3 mb-4">
+                        <div class="row align-items-center g-3">
+                            <div class="col-md-3">
+                                <img src="@(string.IsNullOrEmpty(Model.Car?.ImageUrl) ? "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80" : Model.Car.ImageUrl)" 
+                                     alt="@Model.Car?.Name" class="img-fluid rounded-3 object-fit-cover w-100" style="height: 100px;" />
+                            </div>
+                            <div class="col-md-6">
+                                <h5 class="fw-bold text-dark mb-1">@Model.Car?.Name</h5>
+                                <div class="text-muted small">
+                                    Mã xe: <strong>@Model.Car?.CarCode</strong> &bull; Hãng: <strong>@(Model.Car?.Brand?.Name ?? "Chính hãng")</strong>
+                                </div>
+                                <div class="text-muted small">
+                                    Năm sản xuất: <strong>@Model.Car?.Year</strong> &bull; Màu mong muốn: <strong>@(Model.DesiredColor ?? "Mặc định")</strong>
+                                </div>
+                            </div>
+                            <div class="col-md-3 text-md-end">
+                                <small class="text-muted d-block">Giá niêm yết:</small>
+                                <span class="fs-4 fw-bold text-danger">@((Model.Car?.Price ?? 0).ToString("N0")) VNĐ</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Customer & Order details -->
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-6">
+                            <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">Thông Tin Người Đăng Ký</h5>
+                            <ul class="list-unstyled d-flex flex-column gap-2 small">
+                                <li><strong class="text-muted">Họ tên:</strong> <span class="text-dark fw-semibold">@Model.CustomerName</span></li>
+                                <li><strong class="text-muted">Số điện thoại:</strong> <span class="text-dark fw-semibold">@Model.CustomerPhone</span></li>
+                                <li><strong class="text-muted">Email:</strong> <span class="text-dark fw-semibold">@Model.CustomerEmail</span></li>
+                                <li><strong class="text-muted">Địa chỉ nhận xe:</strong> <span class="text-dark">@(string.IsNullOrEmpty(Model.CustomerAddress) ? "---" : Model.CustomerAddress)</span></li>
+                            </ul>
+                        </div>
+
+                        <div class="col-md-6">
+                            <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">Thông Tin Giao Dịch</h5>
+                            <ul class="list-unstyled d-flex flex-column gap-2 small">
+                                <li><strong class="text-muted">Hình thức thanh toán:</strong> <span class="badge bg-light text-dark border">@(Model.PaymentMethod == PaymentMethod.TienMat ? "Tiền mặt" : "Trả góp")</span></li>
+                                <li><strong class="text-muted">Ghi chú của bạn:</strong> <span class="text-dark">@(string.IsNullOrEmpty(Model.Notes) ? "Không có" : Model.Notes)</span></li>
+                                <li><strong class="text-muted">Cập nhật lần cuối:</strong> <span class="text-dark">@(Model.UpdatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "---")</span></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Showroom Admin Response -->
+                    <div class="card border rounded-3 p-3 bg-light">
+                        <h6 class="fw-bold text-dark mb-2"><i class="bi bi-chat-left-dots text-primary me-2"></i>Phản Hồi Từ Showroom</h6>
+                        @if (!string.IsNullOrEmpty(Model.AdminNotes))
+                        {
+                            <p class="mb-0 text-dark small">@Model.AdminNotes</p>
+                        }
+                        else if (!string.IsNullOrEmpty(Model.CancelReason))
+                        {
+                            <p class="mb-0 text-danger small"><strong>Lý do hủy đơn:</strong> @Model.CancelReason</p>
+                        }
+                        else
+                        {
+                            <p class="mb-0 text-muted small italic">Đơn hàng đang chờ quản trị viên liên hệ xử lý.</p>
+                        }
+                    </div>
+
+                    @if (Model.Status == OrderStatus.DaHoanThanh && Model.VehicleOwnership != null)
+                    {
+                        <div class="alert alert-success mt-4 border-0 rounded-3 d-flex align-items-center justify-content-between">
+                            <div>
+                                <i class="bi bi-check2-circle fs-4 me-2"></i>
+                                <strong>Giao dịch đã hoàn tất!</strong> Xe đã được bàn giao và kích hoạt bảo hành chính hãng.
+                            </div>
+                            <a asp-controller="Warranties" asp-action="MyWarranties" class="btn btn-success btn-sm fw-bold">
+                                Xem hồ sơ bảo hành
+                            </a>
+                        </div>
+                    }
+                    @if (!Model.IsCancelRequested && Model.Status != OrderStatus.DaHoanThanh && Model.Status != OrderStatus.DaHuy)
+                    {
+                        <div class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
+                            <span class="text-muted small">Nếu có thay đổi kế hoạch mua xe, bạn có thể gửi yêu cầu hủy đơn cho Showroom:</span>
+                            <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#userCancelModal">
+                                <i class="bi bi-x-circle me-1"></i> Yêu cầu hủy đơn hàng
+                            </button>
+                        </div>
+
+                        <!-- Modal Request Cancel -->
+                        <div class="modal fade" id="userCancelModal" tabindex="-1" aria-labelledby="userCancelModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content border-0 shadow rounded-4">
+                                    <div class="modal-header border-bottom">
+                                        <h5 class="modal-title fw-bold text-danger" id="userCancelModalLabel">
+                                            <i class="bi bi-exclamation-circle me-2"></i>Yêu Cầu Hủy Đơn Hàng
+                                        </h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <form asp-action="RequestCancel" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@Model.Id" />
+                                        <div class="modal-body p-4">
+                                            <div class="alert alert-info border-0 rounded-3 small mb-3">
+                                                <i class="bi bi-info-circle me-1"></i>
+                                                Sau khi bạn gửi yêu cầu, đơn hàng vẫn sẽ giữ trạng thái <strong>"Chờ xác nhận"</strong> kèm theo lý do hủy của bạn. Khi Quản trị viên (Admin) xem xét và đồng ý xác nhận, đơn hàng mới không ghi nhận vào hệ thống.
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold small text-dark">Lý do hủy đơn hàng <span class="text-danger">*</span></label>
+                                                <textarea name="cancelRequestReason" rows="3" class="form-control" placeholder="Vui lòng cung cấp lý do (ví dụ: muốn đổi xe khác, lý do tài chính...)" required></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer border-top bg-light">
+                                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Đóng</button>
+                                            <button type="submit" class="btn btn-danger btn-sm fw-bold">Gửi Yêu Cầu Hủy</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

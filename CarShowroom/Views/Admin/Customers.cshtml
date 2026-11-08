@@ -1,0 +1,92 @@
+@model List<CarShowroom.Models.Customer>
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Quản lý khách hàng";
+    int currentPage = ViewBag.CurrentPage;
+    int totalPages = ViewBag.TotalPages;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h4 class="fw-bold text-dark mb-0"><i class="bi bi-people text-primary me-2"></i>Danh Sách Khách Hàng</h4>
+        <small class="text-muted">Tổng cộng: @ViewBag.TotalItems khách hàng</small>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white">
+    <form method="get" asp-action="Customers">
+        <div class="row g-2">
+            <div class="col-md-10">
+                <input type="text" name="searchTerm" value="@ViewBag.SearchTerm" class="form-control form-control-sm" placeholder="Tìm theo tên khách hàng, email, số điện thoại..." />
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-secondary btn-sm flex-grow-1"><i class="bi bi-search"></i> Tìm</button>
+                <a asp-action="Customers" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-counterclockwise"></i></a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-3">ID</th>
+                    <th>Họ và tên</th>
+                    <th>Email</th>
+                    <th>Số điện thoại</th>
+                    <th>Địa chỉ</th>
+                    <th>Xe sở hữu</th>
+                    <th>Ngày tạo</th>
+                    <th class="text-end pe-3">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="8" class="text-center py-4 text-muted">Không tìm thấy khách hàng nào.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var c in Model)
+                    {
+                        <tr>
+                            <td class="ps-3 text-muted">#@c.Id</td>
+                            <td><strong class="text-dark">@c.FullName</strong></td>
+                            <td>@c.Email</td>
+                            <td>@(c.PhoneNumber ?? "---")</td>
+                            <td><small class="text-muted">@(c.Address ?? "---")</small></td>
+                            <td>
+                                <span class="badge bg-light text-primary border">@c.VehicleOwnerships.Count xe</span>
+                            </td>
+                            <td>@c.CreatedAt.ToString("dd/MM/yyyy")</td>
+                            <td class="text-end pe-3">
+                                <a asp-action="CustomerDetails" asp-route-id="@c.Id" class="btn btn-outline-primary btn-sm py-0">
+                                    <i class="bi bi-eye"></i> Lịch sử & Chi tiết
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@if (totalPages > 1)
+{
+    <nav class="d-flex justify-content-center mt-4">
+        <ul class="pagination pagination-sm shadow-sm">
+            @for (int i = 1; i <= totalPages; i++)
+            {
+                <li class="page-item @(currentPage == i ? "active" : "")">
+                    <a class="page-link" asp-action="Customers" asp-route-page="@i" asp-route-searchTerm="@ViewBag.SearchTerm">@i</a>
+                </li>
+            }
+        </ul>
+    </nav>
+}
+

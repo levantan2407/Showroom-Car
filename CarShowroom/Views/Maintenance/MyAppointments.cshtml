@@ -1,0 +1,133 @@
+@model List<CarShowroom.Models.MaintenanceAppointment>
+@{
+    ViewData["Title"] = "Lịch bảo dưỡng của tôi";
+}
+
+<div class="bg-dark text-white py-4 mb-4" style="background: linear-gradient(135deg, var(--primary-navy), var(--navy-card));">
+    <div class="container d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="fw-bold mb-1">Lịch Hẹn Bảo Dưỡng Của Tôi</h2>
+            <p class="text-white-50 mb-0 small">Theo dõi trạng thái xác nhận và kết quả thực hiện của xưởng dịch vụ</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="MyHistories" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-clock-history me-1"></i> Lịch sử đã hoàn thành
+            </a>
+            <a asp-action="Book" class="btn btn-gold btn-sm fw-bold">
+                <i class="bi bi-plus-lg me-1"></i> Đặt lịch mới
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container mb-5">
+    @if (!Model.Any())
+    {
+        <div class="card border-0 shadow-sm rounded-4 text-center py-5 bg-white">
+            <div class="py-4">
+                <i class="bi bi-calendar-x text-muted" style="font-size: 3.5rem;"></i>
+                <h5 class="fw-bold mt-3">Bạn chưa có lịch hẹn bảo dưỡng nào</h5>
+                <p class="text-muted small">Hãy đặt lịch hẹn trước để xưởng dịch vụ chuẩn bị khoang tiếp nhận chu đáo nhất.</p>
+                <a asp-action="Book" class="btn btn-navy btn-sm mt-2">Đặt lịch bảo dưỡng ngay</a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Mã lịch</th>
+                            <th>Xe bảo dưỡng</th>
+                            <th>Ngày & Khung giờ</th>
+                            <th>Nội dung yêu cầu</th>
+                            <th>Chi phí thực tế</th>
+                            <th>Trạng thái</th>
+                            <th class="text-end pe-4">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var a in Model)
+                        {
+                            <tr>
+                                <td class="ps-4">
+                                    <strong class="text-primary">@a.AppointmentCode</strong>
+                                </td>
+                                <td>
+                                    <strong>@(a.Car?.Name ?? "Xe")</strong>
+                                    <small class="text-muted d-block">Mã: @(a.Car?.CarCode)</small>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold text-dark">@a.AppointmentDate.ToString("dd/MM/yyyy")</div>
+                                    <small class="text-muted">@a.TimeSlot</small>
+                                </td>
+                                <td>
+                                    <p class="mb-0 text-dark small" style="max-width: 250px;">@a.Content</p>
+                                    @if (!string.IsNullOrEmpty(a.AdminNotes))
+                                    {
+                                        <small class="text-info d-block mt-1">Ghi chú: @a.AdminNotes</small>
+                                    }
+                                </td>
+                                <td>
+                                    @if (a.ActualCost.HasValue)
+                                    {
+                                        <strong class="text-danger">@a.ActualCost.Value.ToString("N0") VNĐ</strong>
+                                    }
+                                    else if (a.EstimatedCost.HasValue)
+                                    {
+                                        <span class="text-muted small">Ước tính: @a.EstimatedCost.Value.ToString("N0") VNĐ</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">Chưa báo giá</span>
+                                    }
+                                </td>
+                                <td>
+                                    @switch (a.Status)
+                                    {
+                                        case AppointmentStatus.ChoXacNhan:
+                                            <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>Chờ xác nhận</span>
+                                            break;
+                                        case AppointmentStatus.DaXacNhan:
+                                            <span class="badge bg-info text-dark"><i class="bi bi-check-circle me-1"></i>Đã xác nhận</span>
+                                            break;
+                                        case AppointmentStatus.DangThucHien:
+                                            <span class="badge bg-primary"><i class="bi bi-tools me-1"></i>Đang thực hiện</span>
+                                            break;
+                                        case AppointmentStatus.HoanThanh:
+                                            <span class="badge bg-success"><i class="bi bi-check2-all me-1"></i>Hoàn thành</span>
+                                            break;
+                                        case AppointmentStatus.TuChoi:
+                                            <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Từ chối</span>
+                                            break;
+                                        case AppointmentStatus.DaHuy:
+                                            <span class="badge bg-secondary"><i class="bi bi-slash-circle me-1"></i>Đã hủy</span>
+                                            break;
+                                    }
+                                </td>
+                                <td class="text-end pe-4">
+                                    @if (a.Status == AppointmentStatus.ChoXacNhan || a.Status == AppointmentStatus.DaXacNhan)
+                                    {
+                                        <form asp-action="Cancel" asp-route-id="@a.Id" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn hủy lịch hẹn bảo dưỡng này?');">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                <i class="bi bi-trash"></i> Hủy lịch
+                                            </button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">---</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+

@@ -1,0 +1,72 @@
+@model CarShowroom.ViewModels.AppointmentCreateViewModel
+@{
+    ViewData["Title"] = "Đăng ký lịch bảo dưỡng";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+                <div class="bg-dark text-white p-4" style="background: linear-gradient(135deg, var(--primary-navy), var(--navy-card));">
+                    <h4 class="fw-bold mb-1"><i class="bi bi-calendar-check text-warning me-2"></i>Đăng Ký Lịch Bảo Dưỡng</h4>
+                    <p class="text-white-50 small mb-0">Đặt lịch hẹn bảo dưỡng định kỳ hoặc sửa chữa nhanh tại xưởng dịch vụ</p>
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+                    <form asp-action="Book" method="post">
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small" role="alert"></div>
+
+                        <div class="mb-4">
+                            <label asp-for="CarId" class="form-label fw-semibold"></label> <span class="text-danger">*</span>
+                            <select asp-for="CarId" class="form-select form-select-lg">
+                                @foreach (var car in Model.MyCars)
+                                {
+                                    <option value="@car.Id">
+                                        @car.Name &bull; Mã: @car.CarCode (@car.Color)
+                                    </option>
+                                }
+                            </select>
+                            <span asp-validation-for="CarId" class="text-danger small"></span>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label asp-for="AppointmentDate" class="form-label fw-semibold"></label> <span class="text-danger">*</span>
+                                <input asp-for="AppointmentDate" type="date" class="form-control" min="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")" />
+                                <span asp-validation-for="AppointmentDate" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="TimeSlot" class="form-label fw-semibold"></label> <span class="text-danger">*</span>
+                                <select asp-for="TimeSlot" class="form-select">
+                                    <option value="08:30 - 10:00">08:30 - 10:00 (Buổi sáng)</option>
+                                    <option value="10:00 - 11:30">10:00 - 11:30 (Buổi sáng)</option>
+                                    <option value="13:30 - 15:00">13:30 - 15:00 (Buổi chiều)</option>
+                                    <option value="15:00 - 16:30">15:00 - 16:30 (Buổi chiều)</option>
+                                </select>
+                                <span asp-validation-for="TimeSlot" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="Content" class="form-label fw-semibold"></label> <span class="text-danger">*</span>
+                            <textarea asp-for="Content" rows="4" class="form-control" placeholder="Ví dụ: Bảo dưỡng định kỳ mốc 10.000 km, thay dầu máy, kiểm tra má phanh, cân bằng động bánh xe..."></textarea>
+                            <span asp-validation-for="Content" class="text-danger small"></span>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                            <a asp-action="MyAppointments" class="btn btn-outline-secondary">
+                                <i class="bi bi-clock-history me-1"></i> Xem lịch hẹn đã đặt
+                            </a>
+                            <button type="submit" class="btn btn-gold btn-lg fw-bold px-4 shadow">
+                                <i class="bi bi-calendar-plus me-1"></i> Xác Nhận Đặt Lịch
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

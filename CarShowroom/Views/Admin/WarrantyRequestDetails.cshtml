@@ -1,0 +1,145 @@
+@model CarShowroom.Models.WarrantyRequest
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Xử lý yêu cầu bảo hành " + Model.RequestCode;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <a asp-action="WarrantyRequests" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách yêu cầu
+    </a>
+    <span class="badge bg-light text-dark border p-2">Mã yêu cầu: @Model.RequestCode</span>
+</div>
+
+<div class="row g-4">
+    <!-- Left Column: Request Details -->
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+            <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
+                <h5 class="fw-bold text-dark mb-0">Nội Dung Sự Cố & Thông Tin Kỹ Thuật</h5>
+                <div>
+                    @switch (Model.Status)
+                    {
+                        case WarrantyRequestStatus.ChoTiepNhan:
+                            <span class="badge bg-warning text-dark px-3 py-2 fs-6">Chờ tiếp nhận</span>
+                            break;
+                        case WarrantyRequestStatus.DaTiepNhan:
+                            <span class="badge bg-info text-dark px-3 py-2 fs-6">Đã tiếp nhận</span>
+                            break;
+                        case WarrantyRequestStatus.DangXuLy:
+                            <span class="badge bg-primary px-3 py-2 fs-6">Đang xử lý</span>
+                            break;
+                        case WarrantyRequestStatus.HoanThanh:
+                            <span class="badge bg-success px-3 py-2 fs-6">Hoàn thành</span>
+                            break;
+                        case WarrantyRequestStatus.TuChoi:
+                            <span class="badge bg-danger px-3 py-2 fs-6">Từ chối</span>
+                            break;
+                    }
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label text-muted small fw-bold text-uppercase">Nội dung sự cố khách hàng báo cáo:</label>
+                <div class="p-3 bg-light rounded-3 text-dark leading-relaxed">
+                    @Model.IssueDescription
+                </div>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label class="form-label text-muted small fw-bold text-uppercase">Tình trạng xe:</label>
+                    <div class="p-2 border rounded-3 small">
+                        @(string.IsNullOrEmpty(Model.VehicleCondition) ? "Không có thông tin bổ sung" : Model.VehicleCondition)
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted small fw-bold text-uppercase">Ngày khách hẹn mang xe tới:</label>
+                    <div class="p-2 border rounded-3 small">
+                        @(Model.PreferredDate?.ToString("dd/MM/yyyy") ?? "Khách không chỉ định")
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vehicle & Owner Information -->
+            <div class="card bg-light border-0 rounded-3 p-3 mb-3">
+                <h6 class="fw-bold text-dark mb-2">Phương Tiện & Hồ Sơ Bảo Hành Gốc</h6>
+                <div class="row g-2 small">
+                    <div class="col-md-6">
+                        <strong>Tên xe:</strong> @(Model.Car?.Name)<br />
+                        <strong>Mã xe:</strong> @(Model.Car?.CarCode)<br />
+                        <strong>Số VIN:</strong> <span class="font-monospace">@(Model.Car?.VIN ?? "---")</span>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Khách hàng:</strong> @(Model.Customer?.FullName)<br />
+                        <strong>Số điện thoại:</strong> @(Model.Customer?.PhoneNumber)<br />
+                        <strong>Hồ sơ bảo hành:</strong> <a asp-action="WarrantyDetails" asp-route-id="@Model.WarrantyId" class="text-primary fw-bold">@(Model.Warranty?.WarrantyCode)</a>
+                    </div>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.AdminNotes))
+            {
+                <div class="alert alert-info border-0 rounded-3 mb-2 small">
+                    <strong>Ghi chú nội bộ:</strong> @Model.AdminNotes
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(Model.RejectReason))
+            {
+                <div class="alert alert-danger border-0 rounded-3 mb-2 small">
+                    <strong>Lý do từ chối bảo hành:</strong> @Model.RejectReason
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(Model.ResultNotes))
+            {
+                <div class="alert alert-success border-0 rounded-3 mb-0 small">
+                    <strong>Kết quả sửa chữa / thay thế phụ tùng:</strong> @Model.ResultNotes
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Right Column: Process Actions -->
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <h6 class="fw-bold text-dark mb-3"><i class="bi bi-gear-wide-connected me-1 text-primary"></i>Cập Nhật Tiến Trình Xử Lý</h6>
+
+            <form asp-action="WarrantyRequestProcess" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-muted">Trạng thái mới</label>
+                    <select name="status" class="form-select" id="statusSelect">
+                        <option value="1" selected="@(Model.Status == WarrantyRequestStatus.DaTiepNhan)">1. Đã tiếp nhận xe tại xưởng</option>
+                        <option value="2" selected="@(Model.Status == WarrantyRequestStatus.DangXuLy)">2. Đang kiểm tra & khắc phục</option>
+                        <option value="3" selected="@(Model.Status == WarrantyRequestStatus.HoanThanh)">3. Hoàn tất & sẵn sàng bàn giao</option>
+                        <option value="4" selected="@(Model.Status == WarrantyRequestStatus.TuChoi)">4. Từ chối yêu cầu bảo hành</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-muted">Ghi chú điều phối / Lời nhắn cho khách</label>
+                    <textarea name="adminNotes" rows="2" class="form-control form-control-sm" placeholder="Xe đã vào khoang số 3, kỹ sư Nguyễn Văn B phụ trách...">@Model.AdminNotes</textarea>
+                </div>
+
+                <div class="mb-3" id="rejectBox">
+                    <label class="form-label small fw-semibold text-danger">Lý do từ chối bảo hành (Nếu từ chối)</label>
+                    <textarea name="rejectReason" rows="2" class="form-control form-control-sm" placeholder="Hết hạn bảo hành / Hư hại do va chạm bên ngoài / Đã độ chế máy móc...">@Model.RejectReason</textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-success">Kết quả xử lý / Phụ tùng thay thế</label>
+                    <textarea name="resultNotes" rows="3" class="form-control form-control-sm" placeholder="Đã thay thế cảm biến oxy chính hãng, nạp lại phần mềm ECU, chạy thử kiểm tra hoạt động bình thường.">@Model.ResultNotes</textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 fw-bold">
+                    <i class="bi bi-save me-1"></i> Lưu Tiến Trình Xử Lý
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+

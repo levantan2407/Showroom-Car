@@ -1,0 +1,100 @@
+@model List<CarShowroom.Models.Warranty>
+@{
+    ViewData["Title"] = "Xe & Bảo hành của tôi";
+}
+
+<div class="bg-dark text-white py-4 mb-4" style="background: linear-gradient(135deg, var(--primary-navy), var(--navy-card));">
+    <div class="container d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="fw-bold mb-1">Xe Đã Sở Hữu & Hồ Sơ Bảo Hành</h2>
+            <p class="text-white-50 mb-0 small">Theo dõi thời hạn bảo hành chính hãng và đặt lịch hỗ trợ kỹ thuật</p>
+        </div>
+        <a asp-action="MyRequests" class="btn btn-outline-light btn-sm">
+            <i class="bi bi-clock-history me-1"></i> Yêu cầu bảo hành đã gửi
+        </a>
+    </div>
+</div>
+
+<div class="container mb-5">
+    @if (!Model.Any())
+    {
+        <div class="card border-0 shadow-sm rounded-4 text-center py-5 bg-white">
+            <div class="py-4">
+                <i class="bi bi-shield-slash text-muted" style="font-size: 3.5rem;"></i>
+                <h5 class="fw-bold mt-3">Bạn chưa có hồ sơ xe nào đã hoàn tất bàn giao</h5>
+                <p class="text-muted small">Sau khi đơn mua xe hoàn tất thủ tục bàn giao, hồ sơ sở hữu và bảo hành chính hãng sẽ hiển thị tại đây.</p>
+                <div class="d-flex justify-content-center gap-2 mt-2">
+                    <a asp-controller="Cars" asp-action="Index" class="btn btn-navy btn-sm">Xem xe đang bán</a>
+                    <a asp-controller="Orders" asp-action="MyOrders" class="btn btn-outline-secondary btn-sm">Đơn hàng của tôi</a>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var w in Model)
+            {
+                var remainingDays = (w.EndDate - DateTime.Today).Days;
+                var isExpired = remainingDays <= 0;
+
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100 bg-white">
+                        <div class="p-3 @(isExpired ? "bg-secondary" : "bg-primary") text-white d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-white-50 d-block">Mã bảo hành:</small>
+                                <strong class="fs-5">@w.WarrantyCode</strong>
+                            </div>
+                            <span class="badge @(isExpired ? "bg-dark" : "bg-warning text-dark") fw-bold px-3 py-2 rounded-pill">
+                                @(isExpired ? "Hết hạn" : "Còn hạn: " + remainingDays + " ngày")
+                            </span>
+                        </div>
+
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <img src="@(string.IsNullOrEmpty(w.Car?.ImageUrl) ? "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80" : w.Car.ImageUrl)" 
+                                     alt="@w.Car?.Name" class="rounded-3 object-fit-cover" style="width: 90px; height: 65px;" />
+                                <div>
+                                    <h5 class="fw-bold text-dark mb-1">@(w.Car?.Name ?? "Xe")</h5>
+                                    <div class="small text-muted">
+                                        Biển số: <strong class="text-dark">@(w.VehicleOwnership?.LicensePlate ?? "Chưa cấp")</strong> &bull; Hãng: @(w.Car?.Brand?.Name ?? "Chính hãng")
+                                    </div>
+                                    <div class="small text-muted font-monospace">
+                                        Số VIN: @(w.Car?.VIN ?? "---")
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="my-3" />
+
+                            <div class="row g-2 small text-muted mb-4">
+                                <div class="col-6">
+                                    <i class="bi bi-calendar-event me-1 text-primary"></i> Bắt đầu: <strong>@w.StartDate.ToString("dd/MM/yyyy")</strong>
+                                </div>
+                                <div class="col-6">
+                                    <i class="bi bi-calendar-x me-1 text-danger"></i> Kết thúc: <strong>@w.EndDate.ToString("dd/MM/yyyy")</strong>
+                                </div>
+                                <div class="col-12 mt-2">
+                                    <i class="bi bi-shield-check me-1 text-success"></i> Gói bảo hành: <strong>@w.WarrantyPeriodMonths tháng chính hãng</strong>
+                                </div>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <a asp-action="Details" asp-route-id="@w.Id" class="btn btn-outline-dark btn-sm flex-grow-1">
+                                    <i class="bi bi-info-circle me-1"></i> Chi tiết điều kiện
+                                </a>
+                                @if (!isExpired)
+                                {
+                                    <a asp-action="CreateRequest" asp-route-warrantyId="@w.Id" class="btn btn-warning btn-sm fw-bold flex-grow-1">
+                                        <i class="bi bi-tools me-1"></i> Báo sự cố / Bảo hành
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+

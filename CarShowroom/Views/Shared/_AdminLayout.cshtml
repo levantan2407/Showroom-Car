@@ -1,0 +1,208 @@
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> UserManager
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Quản trị AutoCare Showroom</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5 CSS -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body class="bg-light">
+    @{
+        var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+        var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+        var currentUser = await UserManager.GetUserAsync(User);
+    }
+
+    <div class="admin-wrapper">
+        <!-- Sidebar -->
+        <aside class="admin-sidebar" id="adminSidebar">
+            <div class="admin-sidebar-header d-flex align-items-center justify-content-between">
+                <a class="navbar-brand-logo" asp-controller="Admin" asp-action="Dashboard">
+                    <span class="logo-icon"><i class="bi bi-shield-shaded"></i></span>
+                    <span class="fs-5">AutoCare <span class="accent">Admin</span></span>
+                </a>
+            </div>
+
+            <ul class="admin-sidebar-menu">
+                <li class="admin-menu-item">
+                    <a class="admin-menu-link @(currentAction == "Dashboard" ? "active" : "")" asp-controller="Admin" asp-action="Dashboard">
+                        <i class="bi bi-speedometer2"></i>
+                        <span>1. Dashboard</span>
+                    </a>
+                </li>
+                <li class="admin-menu-item">
+                    <a class="admin-menu-link @(currentAction == "Cars" || currentAction == "CarCreate" || currentAction == "CarEdit" ? "active" : "")" asp-controller="Admin" asp-action="Cars">
+                        <i class="bi bi-car-front"></i>
+                        <span>2. Quản lý xe</span>
+                    </a>
+                </li>
+                <li class="admin-menu-item">
+                    <a class="admin-menu-link @(currentAction == "Categories" || currentAction == "Brands" ? "active" : "")" asp-controller="Admin" asp-action="Categories">
+                        <i class="bi bi-tags"></i>
+                        <span>3. Danh mục xe</span>
+                    </a>
+                </li>
+                <li class="admin-menu-item">
+                    <a class="admin-menu-link @(currentAction == "Customers" || currentAction == "CustomerDetails" ? "active" : "")" asp-controller="Admin" asp-action="Customers">
+                        <i class="bi bi-people"></i>
+                        <span>4. Quản lý khách hàng</span>
+                    </a>
+                </li>
+                <li class="admin-menu-item">
+                    <a class="admin-menu-link @(currentAction == "Orders" || currentAction == "OrderDetails" ? "active" : "")" asp-controller="Admin" asp-action="Orders">
+                        <i class="bi bi-receipt"></i>
+                        <span>5. Đơn đăng ký mua xe</span>
+                    </a>
+                </li>
+                <li class="admin-menu-item">
+                    <a class="admin-menu-link @(currentAction == "SoldCars" ? "active" : "")" asp-controller="Admin" asp-action="SoldCars">
+                        <i class="bi bi-check2-circle"></i>
+                        <span>6. Quản lý xe đã bán</span>
+                    </a>
+                </li>
+                <li class="admin-menu-item">
+                    <a class="admin-menu-link @(currentAction == "Warranties" || currentAction == "WarrantyDetails" ? "active" : "")" asp-controller="Admin" asp-action="Warranties">
+                        <i class="bi bi-shield-check"></i>
+                        <span>7. Quản lý bảo hành</span>
+                    </a>
+                </li>
+                <li class="admin-menu-item">
+                    <a class="admin-menu-link @(currentAction == "WarrantyRequests" || currentAction == "WarrantyRequestDetails" ? "active" : "")" asp-controller="Admin" asp-action="WarrantyRequests">
+                        <i class="bi bi-exclamation-octagon"></i>
+                        <span>8. Yêu cầu bảo hành</span>
+                    </a>
+                </li>
+                <li class="admin-menu-item">
+                    <a class="admin-menu-link @(currentAction == "Appointments" ? "active" : "")" asp-controller="Admin" asp-action="Appointments">
+                        <i class="bi bi-calendar-check"></i>
+                        <span>9. Lịch bảo dưỡng</span>
+                    </a>
+                </li>
+                <li class="admin-menu-item">
+                    <a class="admin-menu-link @(currentAction == "MaintenanceHistories" ? "active" : "")" asp-controller="Admin" asp-action="MaintenanceHistories">
+                        <i class="bi bi-clock-history"></i>
+                        <span>10. Lịch sử bảo dưỡng</span>
+                    </a>
+                </li>
+                <li class="admin-menu-item">
+                    <a class="admin-menu-link @(currentAction == "Users" ? "active" : "")" asp-controller="Admin" asp-action="Users">
+                        <i class="bi bi-person-gear"></i>
+                        <span>11. Quản lý tài khoản</span>
+                    </a>
+                </li>
+                <li class="admin-menu-item">
+                    <a class="admin-menu-link @(currentAction == "Reports" ? "active" : "")" asp-controller="Admin" asp-action="Reports">
+                        <i class="bi bi-graph-up-arrow"></i>
+                        <span>12. Báo cáo thống kê</span>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="admin-sidebar-footer">
+                <form asp-controller="Account" asp-action="Logout" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="admin-menu-link text-danger w-100 border-0 bg-transparent text-start">
+                        <i class="bi bi-box-arrow-right"></i>
+                        <span>13. Đăng xuất</span>
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="admin-content">
+            <!-- Admin Header -->
+            <header class="admin-header">
+                <div class="d-flex align-items-center gap-3">
+                    <button class="btn btn-sm btn-outline-secondary d-lg-none" type="button" id="sidebarToggle">
+                        <i class="bi bi-list fs-5"></i>
+                    </button>
+                    <h5 class="mb-0 fw-bold text-dark">@ViewData["Title"]</h5>
+                </div>
+
+                <div class="d-flex align-items-center gap-3">
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-outline-primary btn-sm rounded-pill px-3" target="_blank">
+                        <i class="bi bi-globe me-1"></i> Xem Website
+                    </a>
+
+                    <div class="dropdown">
+                        <button class="btn btn-light btn-sm d-flex align-items-center gap-2 border dropdown-toggle" type="button" id="adminDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person-circle text-primary fs-5"></i>
+                            <span class="d-none d-md-inline fw-semibold">@(currentUser?.FullName ?? "Admin")</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="adminDropdown">
+                            <li><a class="dropdown-item" asp-controller="Account" asp-action="Profile"><i class="bi bi-person me-2"></i>Hồ sơ</a></li>
+                            <li><a class="dropdown-item" asp-controller="Account" asp-action="ChangePassword"><i class="bi bi-key me-2"></i>Đổi mật khẩu</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form asp-controller="Account" asp-action="Logout" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="dropdown-item text-danger">
+                                        <i class="bi bi-box-arrow-right me-2"></i>Đăng xuất
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Alerts -->
+            <div class="container-fluid px-4 mt-3">
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show shadow-sm d-flex align-items-center" role="alert">
+                        <i class="bi bi-check-circle-fill fs-5 me-2"></i>
+                        <div>@TempData["SuccessMessage"]</div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+                @if (TempData["ErrorMessage"] != null)
+                {
+                    <div class="alert alert-danger alert-dismissible fade show shadow-sm d-flex align-items-center" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill fs-5 me-2"></i>
+                        <div>@TempData["ErrorMessage"]</div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+            </div>
+
+            <!-- Page Body -->
+            <main class="container-fluid px-4 py-3 flex-grow-1">
+                @RenderBody()
+            </main>
+
+            <!-- Admin Footer -->
+            <footer class="bg-white border-top py-3 px-4 text-muted small text-center">
+                AutoCare Showroom Admin Panel &bull; Bản quyền &copy; 2026
+            </footer>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom Admin JS -->
+    <script>
+        document.getElementById('sidebarToggle')?.addEventListener('click', function() {
+            document.getElementById('adminSidebar')?.classList.toggle('show');
+        });
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
+

@@ -1,0 +1,152 @@
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Quản lý danh mục xe";
+    var brands = ViewBag.Brands as List<CarShowroom.Models.CarBrand> ?? new();
+    var categories = ViewBag.Categories as List<CarShowroom.Models.CarCategory> ?? new();
+    var models = ViewBag.Models as List<CarShowroom.Models.CarModel> ?? new();
+}
+
+<div class="row g-4">
+    <!-- HÃNG XE (BRANDS) -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+            <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold text-dark mb-0"><i class="bi bi-award text-warning me-2"></i>Hãng Xe (@brands.Count)</h5>
+                <button class="btn btn-primary btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#addBrandModal">
+                    <i class="bi bi-plus-lg me-1"></i> Thêm Hãng
+                </button>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light small">
+                        <tr>
+                            <th class="ps-3">ID</th>
+                            <th>Tên hãng</th>
+                            <th>Số xe</th>
+                            <th>Mô tả</th>
+                            <th class="text-end pe-3">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var b in brands)
+                        {
+                            <tr>
+                                <td class="ps-3 text-muted">@b.Id</td>
+                                <td><strong>@b.Name</strong></td>
+                                <td><span class="badge bg-light text-primary border">@b.Cars.Count xe</span></td>
+                                <td><small class="text-muted">@b.Description</small></td>
+                                <td class="text-end pe-3">
+                                    <form asp-action="BrandDelete" asp-route-id="@b.Id" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc muốn xóa hãng xe này?');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-outline-danger btn-sm py-0" title="Xóa"><i class="bi bi-trash"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOẠI XE (CATEGORIES) -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+            <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold text-dark mb-0"><i class="bi bi-tags text-primary me-2"></i>Loại Xe Phân Khúc (@categories.Count)</h5>
+                <button class="btn btn-primary btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+                    <i class="bi bi-plus-lg me-1"></i> Thêm Loại
+                </button>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light small">
+                        <tr>
+                            <th class="ps-3">ID</th>
+                            <th>Tên loại xe</th>
+                            <th>Số xe</th>
+                            <th>Mô tả</th>
+                            <th class="text-end pe-3">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var c in categories)
+                        {
+                            <tr>
+                                <td class="ps-3 text-muted">@c.Id</td>
+                                <td><strong>@c.Name</strong></td>
+                                <td><span class="badge bg-light text-success border">@c.Cars.Count xe</span></td>
+                                <td><small class="text-muted">@c.Description</small></td>
+                                <td class="text-end pe-3">
+                                    <form asp-action="CategoryDelete" asp-route-id="@c.Id" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc muốn xóa loại xe này?');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-outline-danger btn-sm py-0" title="Xóa"><i class="bi bi-trash"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Add Brand -->
+<div class="modal fade" id="addBrandModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content rounded-4 border-0">
+            <form asp-action="BrandCreate" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title fw-bold">Thêm Hãng Xe Mới</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Tên hãng xe <span class="text-danger">*</span></label>
+                        <input type="text" name="name" class="form-control" placeholder="Ví dụ: Lexus, Audi, Porsche..." required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Mô tả tóm tắt</label>
+                        <input type="text" name="description" class="form-control" placeholder="Hãng xe Nhật Bản / Đức..." />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary fw-bold">Lưu Hãng Xe</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Add Category -->
+<div class="modal fade" id="addCategoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content rounded-4 border-0">
+            <form asp-action="CategoryCreate" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title fw-bold">Thêm Loại Xe Mới</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Tên loại xe <span class="text-danger">*</span></label>
+                        <input type="text" name="name" class="form-control" placeholder="Ví dụ: Cabriolet, Wagon, Van..." required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Mô tả tóm tắt</label>
+                        <input type="text" name="description" class="form-control" placeholder="Dòng xe mui trần thể thao..." />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary fw-bold">Lưu Loại Xe</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+

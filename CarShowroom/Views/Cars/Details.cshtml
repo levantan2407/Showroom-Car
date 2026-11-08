@@ -1,0 +1,219 @@
+@model CarShowroom.Models.Car
+@{
+    ViewData["Title"] = Model.Name + " - Chi tiết xe";
+    var relatedCars = ViewBag.RelatedCars as List<CarShowroom.Models.Car> ?? new List<CarShowroom.Models.Car>();
+}
+
+<!-- Breadcrumbs -->
+<div class="bg-light py-2 border-bottom">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-decoration-none">Trang chủ</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Cars" asp-action="Index" class="text-decoration-none">Danh sách xe</a></li>
+                <li class="breadcrumb-item active" aria-current="page">@Model.Name</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="container my-5">
+    <div class="row g-5">
+        <!-- Left: Image & Description -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                <div class="position-relative" style="height: 420px; background-color: #f1f3f5;">
+                    <img src="@(string.IsNullOrEmpty(Model.ImageUrl) ? "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80" : Model.ImageUrl)" 
+                         alt="@Model.Name" class="w-100 h-100 object-fit-cover" />
+                    
+                    @if (Model.Status == CarStatus.DangKinhDoanh)
+                    {
+                        <span class="position-absolute top-0 end-0 m-3 badge bg-success fs-6 px-3 py-2 rounded-pill shadow">
+                            <i class="bi bi-check-circle-fill me-1"></i> Đang kinh doanh
+                        </span>
+                    }
+                    else if (Model.Status == CarStatus.DaBan)
+                    {
+                        <span class="position-absolute top-0 end-0 m-3 badge bg-danger fs-6 px-3 py-2 rounded-pill shadow">
+                            <i class="bi bi-x-circle-fill me-1"></i> Đã bán
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="position-absolute top-0 end-0 m-3 badge bg-secondary fs-6 px-3 py-2 rounded-pill shadow">
+                            @Model.Status
+                        </span>
+                    }
+                </div>
+            </div>
+
+            <!-- Detailed Description Card -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+                <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">
+                    <i class="bi bi-info-circle text-primary me-2"></i>Mô Tả Chi Tiết
+                </h5>
+                <p class="text-muted leading-relaxed mb-0" style="white-space: pre-line;">
+                    @(string.IsNullOrEmpty(Model.Description) ? "Hiện chưa có mô tả chi tiết cho dòng xe này." : Model.Description)
+                </p>
+            </div>
+
+            <!-- Showroom Warranty Commitment Card -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">
+                    <i class="bi bi-shield-check text-warning me-2"></i>Chính Sách & Cam Kết Tại Showroom
+                </h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-check2-circle text-success fs-5"></i>
+                            <span class="small text-muted">Bảo hành chính hãng <strong>3 năm hoặc 100.000 km</strong></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-check2-circle text-success fs-5"></i>
+                            <span class="small text-muted">Kiểm định 160 điểm kỹ thuật nghiêm ngặt</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-check2-circle text-success fs-5"></i>
+                            <span class="small text-muted">Hỗ trợ đăng ký lái thử tận nơi miễn phí</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-check2-circle text-success fs-5"></i>
+                            <span class="small text-muted">Giao xe tận nhà theo yêu cầu trên toàn quốc</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Specs & Actions -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 p-4 sticky-top bg-white" style="top: 90px;">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="badge bg-light text-dark border px-2 py-1">Mã xe: @Model.CarCode</span>
+                    <span class="text-muted small">Hãng: <strong class="text-dark">@(Model.Brand?.Name ?? "Chính hãng")</strong></span>
+                </div>
+
+                <h3 class="fw-bold text-dark mb-2">@Model.Name</h3>
+                
+                <div class="p-3 bg-light rounded-3 my-3">
+                    <small class="text-muted d-block">Giá niêm yết (Đã bao gồm VAT):</small>
+                    <span class="fs-2 fw-bold text-danger">@Model.Price.ToString("N0") VNĐ</span>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-grid gap-2 my-4">
+                    @if (Model.Status == CarStatus.DangKinhDoanh)
+                    {
+                        <a asp-controller="Orders" asp-action="Create" asp-route-carId="@Model.Id" class="btn btn-gold btn-lg fw-bold shadow-sm py-3">
+                            <i class="bi bi-cart-check-fill me-2"></i> Đăng Ký Mua Xe Ngay
+                        </a>
+                    }
+                    else
+                    {
+                        <button class="btn btn-secondary btn-lg py-3" disabled>
+                            <i class="bi bi-x-circle me-1"></i> Xe đã được giao dịch (@Model.Status)
+                        </button>
+                    }
+
+                    <a asp-controller="Home" asp-action="Contact" class="btn btn-outline-dark fw-semibold py-2">
+                        <i class="bi bi-telephone me-2"></i> Liên Hệ Tư Vấn & Lái Thử
+                    </a>
+                </div>
+
+                <!-- Technical Specification Table -->
+                <h5 class="fw-bold text-dark mb-3">Thông Số Kỹ Thuật</h5>
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped border-0 mb-0">
+                        <tbody>
+                            <tr>
+                                <th class="text-muted w-40">Hãng xe</th>
+                                <td class="fw-semibold text-dark">@(Model.Brand?.Name ?? "---")</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Dòng xe</th>
+                                <td class="fw-semibold text-dark">@(Model.CarModel?.Name ?? "---")</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Loại xe</th>
+                                <td class="fw-semibold text-dark">@(Model.Category?.Name ?? "---")</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Phiên bản</th>
+                                <td class="fw-semibold text-dark">@(Model.Version ?? "Tiêu chuẩn")</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Năm sản xuất</th>
+                                <td class="fw-semibold text-dark">@Model.Year</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Màu sắc</th>
+                                <td class="fw-semibold text-dark">@(Model.Color ?? "---")</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Số chỗ ngồi</th>
+                                <td class="fw-semibold text-dark">@(Model.Seats ?? 5) chỗ</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Hộp số</th>
+                                <td class="fw-semibold text-dark">@(Model.Transmission ?? "Tự động")</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Nhiên liệu</th>
+                                <td class="fw-semibold text-dark">@(Model.FuelType ?? "Xăng")</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Động cơ</th>
+                                <td class="fw-semibold text-dark">@(Model.Engine ?? "---")</td>
+                            </tr>
+                            @if (!string.IsNullOrEmpty(Model.VIN))
+                            {
+                                <tr>
+                                    <th class="text-muted">Số VIN</th>
+                                    <td class="font-monospace text-dark">@Model.VIN</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Cars -->
+    @if (relatedCars.Any())
+    {
+        <div class="mt-5 pt-5 border-top">
+            <h4 class="fw-bold mb-4">Các Mẫu Xe Tương Tự Có Thể Bạn Quan Tâm</h4>
+            <div class="row g-4">
+                @foreach (var rCar in relatedCars)
+                {
+                    <div class="col-md-4">
+                        <div class="car-card">
+                            <div class="car-img-wrapper">
+                                <img src="@(string.IsNullOrEmpty(rCar.ImageUrl) ? "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80" : rCar.ImageUrl)" 
+                                     alt="@rCar.Name" loading="lazy" />
+                                <span class="car-badge-brand">@(rCar.Brand?.Name ?? "Chính hãng")</span>
+                            </div>
+                            <div class="car-card-body">
+                                <h6 class="car-name">@rCar.Name</h6>
+                                <div class="car-price fs-6">@rCar.Price.ToString("N0") VNĐ</div>
+                                <div class="mt-2">
+                                    <a asp-action="Details" asp-route-id="@rCar.Id" class="btn btn-outline-dark btn-sm w-100">
+                                        Xem chi tiết
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+

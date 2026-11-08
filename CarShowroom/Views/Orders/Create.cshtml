@@ -1,0 +1,113 @@
+@model CarShowroom.ViewModels.OrderCreateViewModel
+@{
+    ViewData["Title"] = "Đăng ký mua xe";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Notice Banner -->
+            <div class="alert alert-info border-0 shadow-sm rounded-4 p-4 mb-4 d-flex align-items-start gap-3">
+                <i class="bi bi-info-circle-fill fs-3 text-primary flex-shrink-0"></i>
+                <div>
+                    <h5 class="fw-bold mb-1">Lưu ý quan trọng về quy trình đăng ký</h5>
+                    <p class="mb-0 small text-muted">
+                        Đây là biểu mẫu <strong>đăng ký nhu cầu mua xe</strong> trực tuyến, không phải cổng thanh toán trực tiếp. Sau khi gửi đăng ký thành công, chuyên viên tư vấn của AutoCare Showroom sẽ liên hệ trực tiếp với bạn để xác nhận thông tin và hướng dẫn hoàn thiện thủ tục giao dịch. Trạng thái xe chỉ được cập nhật "Đã bán" khi hợp đồng được ký kết chính thức.
+                    </p>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+                <div class="bg-dark text-white p-4" style="background: linear-gradient(135deg, var(--primary-navy), var(--navy-card));">
+                    <h4 class="fw-bold mb-1"><i class="bi bi-cart-check me-2 text-warning"></i>Biểu Mẫu Đăng Ký Mua Xe</h4>
+                    <p class="text-white-50 small mb-0">Vui lòng kiểm tra lại thông tin xe và điền các thông tin liên hệ bên dưới</p>
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+                    <!-- Selected Car Summary Card -->
+                    <div class="card border rounded-3 p-3 mb-4 bg-light">
+                        <div class="row align-items-center g-3">
+                            <div class="col-md-3">
+                                <img src="@(string.IsNullOrEmpty(Model.ImageUrl) ? "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80" : Model.ImageUrl)" 
+                                     alt="@Model.CarName" class="img-fluid rounded-3 object-fit-cover" style="height: 110px; width: 100%;" />
+                            </div>
+                            <div class="col-md-6">
+                                <span class="badge bg-secondary mb-1">@Model.CarCode</span>
+                                <h5 class="fw-bold text-dark mb-1">@Model.CarName</h5>
+                                <div class="text-muted small">
+                                    Hãng: <strong>@Model.BrandName</strong> &bull; Phiên bản: <strong>@(Model.Version ?? "Tiêu chuẩn")</strong>
+                                </div>
+                            </div>
+                            <div class="col-md-3 text-md-end">
+                                <small class="text-muted d-block">Giá bán:</small>
+                                <span class="fs-4 fw-bold text-danger">@Model.Price.ToString("N0") VNĐ</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Registration Form -->
+                    <form asp-action="Create" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="CarId" />
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small" role="alert"></div>
+
+                        <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">Thông Tin Khách Hàng</h5>
+                        
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label asp-for="CustomerName" class="form-label fw-semibold"></label> <span class="text-danger">*</span>
+                                <input asp-for="CustomerName" class="form-control" placeholder="Nguyễn Văn A" />
+                                <span asp-validation-for="CustomerName" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="CustomerPhone" class="form-label fw-semibold"></label> <span class="text-danger">*</span>
+                                <input asp-for="CustomerPhone" class="form-control" placeholder="0901 234 567" />
+                                <span asp-validation-for="CustomerPhone" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="CustomerEmail" class="form-label fw-semibold"></label> <span class="text-danger">*</span>
+                                <input asp-for="CustomerEmail" class="form-control" placeholder="name@example.com" />
+                                <span asp-validation-for="CustomerEmail" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="CustomerAddress" class="form-label fw-semibold"></label>
+                                <input asp-for="CustomerAddress" class="form-control" placeholder="Địa chỉ giao xe mong muốn" />
+                                <span asp-validation-for="CustomerAddress" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">Tùy Chọn Mua Xe</h5>
+                        
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label asp-for="DesiredColor" class="form-label fw-semibold"></label>
+                                <input asp-for="DesiredColor" class="form-control" placeholder="Ví dụ: Đen, Trắng ngọc trai, Đỏ..." />
+                                <span asp-validation-for="DesiredColor" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="PaymentMethod" class="form-label fw-semibold"></label> <span class="text-danger">*</span>
+                                <select asp-for="PaymentMethod" class="form-select" asp-items="Html.GetEnumSelectList<PaymentMethod>()"></select>
+                                <span asp-validation-for="PaymentMethod" class="text-danger small"></span>
+                            </div>
+                            <div class="col-12">
+                                <label asp-for="Notes" class="form-label fw-semibold"></label>
+                                <textarea asp-for="Notes" rows="3" class="form-control" placeholder="Thời gian thuận tiện nhận cuộc gọi, yêu cầu biển số, quà tặng phụ kiện..."></textarea>
+                                <span asp-validation-for="Notes" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                            <a asp-controller="Cars" asp-action="Details" asp-route-id="@Model.CarId" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i> Quay lại chi tiết xe
+                            </a>
+                            <button type="submit" class="btn btn-gold btn-lg fw-bold px-4 shadow">
+                                <i class="bi bi-send-check-fill me-1"></i> Gửi Đăng Ký Mua Xe
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

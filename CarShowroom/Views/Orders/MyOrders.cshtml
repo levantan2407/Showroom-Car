@@ -1,0 +1,131 @@
+@model List<CarShowroom.Models.Order>
+@{
+    ViewData["Title"] = "Đơn đăng ký mua xe của tôi";
+}
+
+<div class="bg-dark text-white py-4 mb-4" style="background: linear-gradient(135deg, var(--primary-navy), var(--navy-card));">
+    <div class="container d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="fw-bold mb-1">Đơn Đăng Ký Mua Xe Của Tôi</h2>
+            <p class="text-white-50 mb-0 small">Theo dõi tiến độ xử lý và phản hồi từ quản trị viên</p>
+        </div>
+        <a asp-controller="Cars" asp-action="Index" class="btn btn-gold btn-sm fw-bold">
+            <i class="bi bi-plus-lg me-1"></i> Khám phá xe khác
+        </a>
+    </div>
+</div>
+
+<div class="container mb-5">
+    @if (!Model.Any())
+    {
+        <div class="card border-0 shadow-sm rounded-4 text-center py-5 bg-white">
+            <div class="py-4">
+                <i class="bi bi-cart-x text-muted" style="font-size: 3.5rem;"></i>
+                <h5 class="fw-bold mt-3">Bạn chưa có đơn đăng ký mua xe nào</h5>
+                <p class="text-muted small">Hãy chọn mẫu xe ưng ý và gửi thông tin đăng ký để nhận tư vấn tốt nhất.</p>
+                <a asp-controller="Cars" asp-action="Index" class="btn btn-navy btn-sm mt-2">Xem danh sách xe</a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Mã đơn</th>
+                            <th>Xe đăng ký</th>
+                            <th>Ngày đăng ký</th>
+                            <th>Hình thức</th>
+                            <th>Trạng thái</th>
+                            <th>Phản hồi Showroom</th>
+                            <th class="text-end pe-4">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var order in Model)
+                        {
+                            <tr>
+                                <td class="ps-4">
+                                    <strong class="text-primary">@order.OrderCode</strong>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <img src="@(string.IsNullOrEmpty(order.Car?.ImageUrl) ? "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80" : order.Car.ImageUrl)" 
+                                             alt="@order.Car?.Name" class="rounded object-fit-cover" style="width: 45px; height: 32px;" />
+                                        <div>
+                                            <a asp-controller="Cars" asp-action="Details" asp-route-id="@order.CarId" class="text-dark fw-bold text-decoration-none">
+                                                @(order.Car?.Name ?? "Xe")
+                                            </a>
+                                            <small class="text-muted d-block">@((order.Car?.Price ?? 0).ToString("N0")) VNĐ</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>@order.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">
+                                        @(order.PaymentMethod == PaymentMethod.TienMat ? "Tiền mặt" : "Trả góp")
+                                    </span>
+                                </td>
+                                <td>
+                                    @switch (order.Status)
+                                    {
+                                        case OrderStatus.ChoXacNhan:
+                                            <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>Chờ xác nhận</span>
+                                            break;
+                                        case OrderStatus.DaLienHe:
+                                            <span class="badge bg-info text-dark"><i class="bi bi-telephone-outbound me-1"></i>Đã liên hệ</span>
+                                            break;
+                                        case OrderStatus.DaXacNhan:
+                                            <span class="badge bg-primary"><i class="bi bi-check-circle me-1"></i>Đã xác nhận</span>
+                                            break;
+                                        case OrderStatus.DangHoanTat:
+                                            <span class="badge bg-secondary"><i class="bi bi-file-earmark-text me-1"></i>Đang làm thủ tục</span>
+                                            break;
+                                        case OrderStatus.DaHoanThanh:
+                                            <span class="badge bg-success"><i class="bi bi-check2-all me-1"></i>Đã hoàn thành</span>
+                                            break;
+                                        case OrderStatus.DaHuy:
+                                            <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Đã hủy</span>
+                                            break;
+                                    }
+                                    @if (order.IsCancelRequested && order.Status != OrderStatus.DaHuy)
+                                    {
+                                        <div class="mt-1">
+                                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger"><i class="bi bi-exclamation-triangle me-1"></i>Chờ duyệt hủy</span>
+                                        </div>
+                                    }
+                                </td>
+                                <td>
+                                    @if (order.IsCancelRequested && order.Status != OrderStatus.DaHuy)
+                                    {
+                                        <small class="text-danger fw-semibold d-block">Lý do xin hủy: @order.CancelRequestReason</small>
+                                    }
+                                    @if (!string.IsNullOrEmpty(order.AdminNotes))
+                                    {
+                                        <small class="text-dark">@order.AdminNotes</small>
+                                    }
+                                    else if (!string.IsNullOrEmpty(order.CancelReason))
+                                    {
+                                        <small class="text-danger">Lý do hủy: @order.CancelReason</small>
+                                    }
+                                    else if (!order.IsCancelRequested)
+                                    {
+                                        <small class="text-muted italic">Đang chờ xử lý</small>
+                                    }
+                                </td>
+                                <td class="text-end pe-4">
+                                    <a asp-action="Details" asp-route-id="@order.Id" class="btn btn-outline-dark btn-sm">
+                                        <i class="bi bi-eye"></i> Chi tiết
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+

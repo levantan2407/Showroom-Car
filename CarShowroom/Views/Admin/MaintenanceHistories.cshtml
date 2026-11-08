@@ -1,0 +1,112 @@
+@model List<CarShowroom.Models.MaintenanceHistory>
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Quản lý lịch sử bảo dưỡng";
+    var cars = ViewBag.Cars as List<CarShowroom.Models.Car> ?? new();
+    int currentPage = ViewBag.CurrentPage;
+    int totalPages = ViewBag.TotalPages;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h4 class="fw-bold text-dark mb-0"><i class="bi bi-clock-history text-primary me-2"></i>Sổ Lịch Sử Bảo Dưỡng & Sửa Chữa</h4>
+        <small class="text-muted">Tổng cộng: @ViewBag.TotalItems bản ghi lịch sử</small>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white">
+    <form method="get" asp-action="MaintenanceHistories">
+        <div class="row g-2">
+            <div class="col-md-9">
+                <select name="carId" class="form-select form-select-sm">
+                    <option value="">Tất cả xe</option>
+                    @foreach (var c in cars)
+                    {
+                        <option value="@c.Id" selected="@(ViewBag.CarId == c.Id)">@c.CarCode - @c.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-secondary btn-sm flex-grow-1"><i class="bi bi-funnel"></i> Lọc theo xe</button>
+                <a asp-action="MaintenanceHistories" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-counterclockwise"></i></a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-3">Ngày bảo dưỡng</th>
+                    <th>Xe thực hiện</th>
+                    <th>Khách hàng</th>
+                    <th>Nội dung công việc</th>
+                    <th>Chi phí</th>
+                    <th>Ghi chú</th>
+                    <th class="text-center pe-3">Trạng thái</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">Chưa có bản ghi lịch sử bảo dưỡng nào.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var h in Model)
+                    {
+                        <tr>
+                            <td class="ps-3"><strong class="text-dark">@h.MaintenanceDate.ToString("dd/MM/yyyy")</strong></td>
+                            <td>
+                                <strong>@(h.Car?.Name ?? "Xe")</strong>
+                                <small class="text-muted d-block font-monospace">Mã: @(h.Car?.CarCode)</small>
+                            </td>
+                            <td>
+                                <div>@(h.Customer?.FullName ?? "---")</div>
+                                <small class="text-muted">@(h.Customer?.PhoneNumber)</small>
+                            </td>
+                            <td>
+                                <p class="mb-0 text-dark small" style="max-width: 320px;">@h.Content</p>
+                            </td>
+                            <td>
+                                @if (h.Cost.HasValue)
+                                {
+                                    <strong class="text-danger">@h.Cost.Value.ToString("N0") VNĐ</strong>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-light text-success border">Miễn phí</span>
+                                }
+                            </td>
+                            <td><small class="text-muted">@(string.IsNullOrEmpty(h.Notes) ? "---" : h.Notes)</small></td>
+                            <td class="text-center pe-3">
+                                <span class="badge bg-success bg-opacity-10 text-success fw-bold px-2 py-1">
+                                    <i class="bi bi-check2-circle me-1"></i>Đã thực hiện
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@if (totalPages > 1)
+{
+    <nav class="d-flex justify-content-center mt-4">
+        <ul class="pagination pagination-sm shadow-sm">
+            @for (int i = 1; i <= totalPages; i++)
+            {
+                <li class="page-item @(currentPage == i ? "active" : "")">
+                    <a class="page-link" asp-action="MaintenanceHistories" asp-route-page="@i" asp-route-carId="@ViewBag.CarId">@i</a>
+                </li>
+            }
+        </ul>
+    </nav>
+}
+

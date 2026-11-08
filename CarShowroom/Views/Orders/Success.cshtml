@@ -1,0 +1,57 @@
+@model CarShowroom.Models.Order
+@{
+    ViewData["Title"] = "Đăng ký thành công";
+}
+
+<div class="container py-5 my-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden text-center p-5 bg-white">
+                <div class="mb-4">
+                    <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-success bg-opacity-10 text-success p-4 fs-1">
+                        <i class="bi bi-check2-circle" style="font-size: 4rem;"></i>
+                    </span>
+                </div>
+
+                <h2 class="fw-bold text-dark mb-2">Đăng Ký Mua Xe Thành Công!</h2>
+                <p class="text-muted leading-relaxed max-w-700 mx-auto mb-4">
+                    Cảm ơn bạn đã lựa chọn AutoCare Showroom. Yêu cầu của bạn đã được tiếp nhận vào hệ thống. Đội ngũ chuyên viên tư vấn sẽ liên hệ với bạn trong vòng <strong>2 giờ làm việc</strong>.
+                </p>
+
+                <!-- Order Code Highlight Box -->
+                <div class="bg-light p-4 rounded-4 mb-4 border d-inline-block mx-auto text-start w-100" style="max-width: 550px;">
+                    <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
+                        <span class="text-muted small">Mã đơn đăng ký:</span>
+                        <strong class="fs-5 text-primary">@Model.OrderCode</strong>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
+                        <span class="text-muted small">Xe đăng ký:</span>
+                        <strong class="text-dark">@(Model.Car?.Name ?? "Xe")</strong>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
+                        <span class="text-muted small">Giá niêm yết:</span>
+                        <strong class="text-danger">@((Model.Car?.Price ?? 0).ToString("N0")) VNĐ</strong>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
+                        <span class="text-muted small">Hình thức thanh toán:</span>
+                        <strong class="text-dark">@(Model.PaymentMethod == PaymentMethod.TienMat ? "Tiền mặt" : "Trả góp")</strong>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted small">Trạng thái xử lý:</span>
+                        <span class="badge bg-warning text-dark">Chờ xác nhận</span>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-wrap justify-content-center gap-3">
+                    <a asp-action="MyOrders" class="btn btn-navy px-4">
+                        <i class="bi bi-clock-history me-1"></i> Theo dõi đơn của tôi
+                    </a>
+                    <a asp-controller="Cars" asp-action="Index" class="btn btn-outline-secondary px-4">
+                        <i class="bi bi-arrow-left me-1"></i> Tiếp tục xem xe
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

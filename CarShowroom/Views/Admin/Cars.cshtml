@@ -1,0 +1,149 @@
+@model List<CarShowroom.Models.Car>
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Quản lý xe ô tô";
+    var brands = ViewBag.Brands as List<CarShowroom.Models.CarBrand> ?? new();
+    int currentPage = ViewBag.CurrentPage;
+    int totalPages = ViewBag.TotalPages;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h4 class="fw-bold text-dark mb-0">Danh Sách Xe Trong Kho & Trưng Bày</h4>
+        <small class="text-muted">Tổng cộng: @ViewBag.TotalItems xe</small>
+    </div>
+    <a asp-action="CarCreate" class="btn btn-primary fw-bold shadow-sm">
+        <i class="bi bi-plus-lg me-1"></i> Thêm Xe Mới
+    </a>
+</div>
+
+<!-- Filter Bar -->
+<div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white">
+    <form method="get" asp-action="Cars">
+        <div class="row g-2">
+            <div class="col-md-4">
+                <input type="text" name="searchTerm" value="@ViewBag.SearchTerm" class="form-control form-control-sm" placeholder="Tìm theo tên xe, mã xe, số VIN..." />
+            </div>
+            <div class="col-md-3">
+                <select name="brandId" class="form-select form-select-sm">
+                    <option value="">Tất cả hãng xe</option>
+                    @foreach (var b in brands)
+                    {
+                        <option value="@b.Id" selected="@(ViewBag.BrandId == b.Id)">@b.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-select form-select-sm">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="0" selected="@(ViewBag.Status != null && (int)ViewBag.Status == 0)">Đang kinh doanh</option>
+                    <option value="1" selected="@(ViewBag.Status != null && (int)ViewBag.Status == 1)">Đã đặt cọc</option>
+                    <option value="2" selected="@(ViewBag.Status != null && (int)ViewBag.Status == 2)">Đã bán</option>
+                    <option value="3" selected="@(ViewBag.Status != null && (int)ViewBag.Status == 3)">Ngừng kinh doanh</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-secondary btn-sm flex-grow-1"><i class="bi bi-funnel"></i> Lọc</button>
+                <a asp-action="Cars" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-counterclockwise"></i></a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Cars Table -->
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-3">Mã xe</th>
+                    <th>Hình ảnh</th>
+                    <th>Tên xe</th>
+                    <th>Hãng & Dòng</th>
+                    <th>Năm SX</th>
+                    <th>Giá niêm yết</th>
+                    <th>Trạng thái</th>
+                    <th class="text-end pe-3">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="8" class="text-center py-4 text-muted">Không tìm thấy xe nào.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var car in Model)
+                    {
+                        <tr>
+                            <td class="ps-3"><strong class="badge bg-light text-dark border">@car.CarCode</strong></td>
+                            <td>
+                                <img src="@(string.IsNullOrEmpty(car.ImageUrl) ? "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80" : car.ImageUrl)" 
+                                     alt="@car.Name" class="rounded object-fit-cover" style="width: 60px; height: 40px;" />
+                            </td>
+                            <td>
+                                <strong>@car.Name</strong>
+                                <small class="text-muted d-block">Phiên bản: @(car.Version ?? "Tiêu chuẩn") &bull; Màu: @(car.Color ?? "---")</small>
+                            </td>
+                            <td>
+                                <div>@(car.Brand?.Name ?? "---")</div>
+                                <small class="text-muted">@(car.Category?.Name ?? "")</small>
+                            </td>
+                            <td>@car.Year</td>
+                            <td><strong class="text-danger">@car.Price.ToString("N0") VNĐ</strong></td>
+                            <td>
+                                @switch (car.Status)
+                                {
+                                    case CarStatus.DangKinhDoanh:
+                                        <span class="badge badge-status-available">Đang kinh doanh</span>
+                                        break;
+                                    case CarStatus.DaDatCoc:
+                                        <span class="badge badge-status-deposit">Đã đặt cọc</span>
+                                        break;
+                                    case CarStatus.DaBan:
+                                        <span class="badge badge-status-sold">Đã bán</span>
+                                        break;
+                                    case CarStatus.NgungKinhDoanh:
+                                        <span class="badge badge-status-stopped">Ngừng KD</span>
+                                        break;
+                                }
+                            </td>
+                            <td class="text-end pe-3">
+                                <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id" class="btn btn-outline-info btn-sm py-0" target="_blank" title="Xem trên web">
+                                    <i class="bi bi-box-arrow-up-right"></i>
+                                </a>
+                                <a asp-action="CarEdit" asp-route-id="@car.Id" class="btn btn-outline-primary btn-sm py-0 ms-1" title="Chỉnh sửa">
+                                    <i class="bi bi-pencil-square"></i> Sửa
+                                </a>
+                                <form asp-action="CarDelete" asp-route-id="@car.Id" method="post" class="d-inline ms-1" onsubmit="return confirm('Bạn có chắc muốn xóa xe này?');">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-outline-danger btn-sm py-0" title="Xóa">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Pagination -->
+@if (totalPages > 1)
+{
+    <nav class="d-flex justify-content-center mt-4">
+        <ul class="pagination pagination-sm shadow-sm">
+            @for (int i = 1; i <= totalPages; i++)
+            {
+                <li class="page-item @(currentPage == i ? "active" : "")">
+                    <a class="page-link" asp-action="Cars" asp-route-page="@i" asp-route-searchTerm="@ViewBag.SearchTerm" asp-route-brandId="@ViewBag.BrandId" asp-route-status="@ViewBag.Status">@i</a>
+                </li>
+            }
+        </ul>
+    </nav>
+}
+

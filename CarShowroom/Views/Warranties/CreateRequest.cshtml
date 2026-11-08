@@ -1,0 +1,66 @@
+@model CarShowroom.ViewModels.WarrantyRequestCreateViewModel
+@{
+    ViewData["Title"] = "Gửi yêu cầu bảo hành";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+                <div class="bg-dark text-white p-4" style="background: linear-gradient(135deg, var(--primary-navy), var(--navy-card));">
+                    <h4 class="fw-bold mb-1"><i class="bi bi-tools text-warning me-2"></i>Gửi Yêu Cầu Bảo Hành Kỹ Thuật</h4>
+                    <p class="text-white-50 small mb-0">Mô tả sự cố bạn đang gặp phải để kỹ thuật viên tiếp nhận và xử lý</p>
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+                    <form asp-action="CreateRequest" method="post">
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small" role="alert"></div>
+
+                        <div class="mb-4">
+                            <label asp-for="WarrantyId" class="form-label fw-semibold"></label> <span class="text-danger">*</span>
+                            <select asp-for="WarrantyId" class="form-select form-select-lg">
+                                @foreach (var w in Model.AvailableWarranties)
+                                {
+                                    <option value="@w.Id">
+                                        @w.WarrantyCode &bull; @(w.Car?.Name) (Hết hạn: @w.EndDate.ToString("dd/MM/yyyy"))
+                                    </option>
+                                }
+                            </select>
+                            <span asp-validation-for="WarrantyId" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="IssueDescription" class="form-label fw-semibold"></label> <span class="text-danger">*</span>
+                            <textarea asp-for="IssueDescription" rows="4" class="form-control" placeholder="Mô tả cụ thể hiện tượng: ví dụ tiếng kêu lạ dưới gầm xe, đèn báo lỗi động cơ Check Engine, điều hòa không mát..."></textarea>
+                            <span asp-validation-for="IssueDescription" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="VehicleCondition" class="form-label fw-semibold"></label>
+                            <input asp-for="VehicleCondition" class="form-control" placeholder="Xe vẫn nổ máy chạy được / Xe chết máy cần cứu hộ kéo về xưởng..." />
+                            <span asp-validation-for="VehicleCondition" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="PreferredDate" class="form-label fw-semibold"></label> <span class="text-danger">*</span>
+                            <input asp-for="PreferredDate" type="date" class="form-control" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                            <span asp-validation-for="PreferredDate" class="text-danger small"></span>
+                            <small class="text-muted">Chọn ngày bạn dự kiến mang xe đến xưởng dịch vụ của showroom.</small>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                            <a asp-action="MyWarranties" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i> Hủy & Quay lại
+                            </a>
+                            <button type="submit" class="btn btn-gold btn-lg fw-bold px-4 shadow">
+                                <i class="bi bi-send-fill me-1"></i> Gửi Yêu Cầu
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

@@ -1,0 +1,402 @@
+@model CarShowroom.ViewModels.AdminDashboardViewModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Bảng Điều Khiển Quản Trị (Dashboard)";
+}
+
+<!-- Top Statistics Cards -->
+<div class="row g-3 mb-4">
+    <!-- Card 1 -->
+    <div class="col-xl-3 col-sm-6">
+        <div class="stat-card">
+            <div>
+                <small class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem;">Tổng số xe</small>
+                <h3 class="fw-bold mb-0 text-dark">@Model.TotalCars</h3>
+                <small class="text-success"><i class="bi bi-check-circle me-1"></i>@Model.AvailableCars đang bán</small>
+            </div>
+            <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                <i class="bi bi-car-front-fill"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 2 -->
+    <div class="col-xl-3 col-sm-6">
+        <div class="stat-card">
+            <div>
+                <small class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem;">Xe đã bán</small>
+                <h3 class="fw-bold mb-0 text-success">@Model.SoldCars</h3>
+                <small class="text-muted"><i class="bi bi-shield-check me-1"></i>Đã bàn giao</small>
+            </div>
+            <div class="stat-icon bg-success bg-opacity-10 text-success">
+                <i class="bi bi-check2-all"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 3 -->
+    <div class="col-xl-3 col-sm-6">
+        <div class="stat-card">
+            <div>
+                <small class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem;">Khách hàng</small>
+                <h3 class="fw-bold mb-0 text-dark">@Model.TotalCustomers</h3>
+                <small class="text-primary"><i class="bi bi-people me-1"></i>Hồ sơ số hóa</small>
+            </div>
+            <div class="stat-icon bg-info bg-opacity-10 text-info">
+                <i class="bi bi-people-fill"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 4 -->
+    <div class="col-xl-3 col-sm-6">
+        <div class="stat-card">
+            <div>
+                <small class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem;">Đơn mua chờ duyệt</small>
+                <h3 class="fw-bold mb-0 text-warning">@Model.PendingOrders</h3>
+                <small class="text-warning"><i class="bi bi-hourglass-split me-1"></i>Cần liên hệ</small>
+            </div>
+            <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+                <i class="bi bi-receipt"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 5 -->
+    <div class="col-xl-3 col-sm-6">
+        <div class="stat-card">
+            <div>
+                <small class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem;">Xe còn bảo hành</small>
+                <h3 class="fw-bold mb-0 text-primary">@Model.ActiveWarranties</h3>
+                <small class="text-muted"><i class="bi bi-shield-fill-check me-1"></i>Hồ sơ hiệu lực</small>
+            </div>
+            <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                <i class="bi bi-shield-check"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 6 -->
+    <div class="col-xl-3 col-sm-6">
+        <div class="stat-card">
+            <div>
+                <small class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem;">Yêu cầu BH chờ xử lý</small>
+                <h3 class="fw-bold mb-0 text-danger">@Model.PendingWarrantyRequests</h3>
+                <small class="text-danger"><i class="bi bi-exclamation-circle me-1"></i>Cần tiếp nhận</small>
+            </div>
+            <div class="stat-icon bg-danger bg-opacity-10 text-danger">
+                <i class="bi bi-tools"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 7 -->
+    <div class="col-xl-3 col-sm-6">
+        <div class="stat-card">
+            <div>
+                <small class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem;">Lịch bảo dưỡng chờ duyệt</small>
+                <h3 class="fw-bold mb-0 text-info">@Model.PendingAppointments</h3>
+                <small class="text-info"><i class="bi bi-calendar-event me-1"></i>Chờ xác nhận hẹn</small>
+            </div>
+            <div class="stat-icon bg-info bg-opacity-10 text-info">
+                <i class="bi bi-calendar-check"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 8 Quick link -->
+    <div class="col-xl-3 col-sm-6">
+        <div class="stat-card bg-primary text-white">
+            <div>
+                <small class="text-white-50 text-uppercase fw-bold" style="font-size: 0.75rem;">Thao tác nhanh</small>
+                <h6 class="fw-bold mb-1">Thêm Xe Mới</h6>
+                <a asp-action="CarCreate" class="btn btn-warning btn-sm fw-bold px-3 mt-1">
+                    <i class="bi bi-plus-lg me-1"></i> Nhập xe vào kho
+                </a>
+            </div>
+            <div class="stat-icon bg-white bg-opacity-25 text-white">
+                <i class="bi bi-plus-circle"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div class="row g-4 mb-4">
+    <!-- Chart 1: Doanh thu theo tháng -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold text-dark mb-0"><i class="bi bi-graph-up text-primary me-2"></i>Doanh Thu Bán Xe 6 Tháng Gần Nhất (VNĐ)</h6>
+                <span class="badge bg-light text-muted border">Chỉ tính giao dịch hoàn tất</span>
+            </div>
+            <div style="height: 300px;">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart 2: Cơ cấu tình trạng xe -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+            <h6 class="fw-bold text-dark mb-3"><i class="bi bi-pie-chart text-warning me-2"></i>Cơ Cấu Tình Trạng Xe</h6>
+            <div style="height: 250px; position: relative;">
+                <canvas id="statusChart"></canvas>
+            </div>
+            <div class="d-flex justify-content-around text-center mt-3 pt-3 border-top small">
+                <div>
+                    <span class="d-block fw-bold text-success">@Model.StatusDangKinhDoanh</span>
+                    <span class="text-muted">Đang bán</span>
+                </div>
+                <div>
+                    <span class="d-block fw-bold text-danger">@Model.StatusDaBan</span>
+                    <span class="text-muted">Đã bán</span>
+                </div>
+                <div>
+                    <span class="d-block fw-bold text-warning">@Model.StatusDaDatCoc</span>
+                    <span class="text-muted">Đặt cọc</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart 3: Số lượng xe bán theo tháng -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <h6 class="fw-bold text-dark mb-3"><i class="bi bi-bar-chart text-success me-2"></i>Số Lượng Xe Đã Bàn Giao Theo Tháng</h6>
+            <div style="height: 220px;">
+                <canvas id="salesChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart 4: Số lượng yêu cầu bảo hành -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <h6 class="fw-bold text-dark mb-3"><i class="bi bi-tools text-danger me-2"></i>Yêu Cầu Bảo Hành Tiếp Nhận Theo Tháng</h6>
+            <div style="height: 220px;">
+                <canvas id="warrantyChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tables: Recent Orders & Recent Warranty Requests -->
+<div class="row g-4 mb-4">
+    <!-- Recent Orders -->
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+            <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold text-dark mb-0"><i class="bi bi-receipt text-primary me-2"></i>Đơn Mua Xe Mới Nhất</h6>
+                <a asp-action="Orders" class="btn btn-outline-dark btn-sm">Xem tất cả</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 small">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Mã đơn</th>
+                            <th>Khách hàng</th>
+                            <th>Xe đăng ký</th>
+                            <th>Trạng thái</th>
+                            <th class="text-end">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var o in Model.RecentOrders)
+                        {
+                            <tr>
+                                <td><strong class="text-primary">@o.OrderCode</strong></td>
+                                <td>@o.CustomerName<br/><small class="text-muted">@o.CustomerPhone</small></td>
+                                <td>@(o.Car?.Name ?? "Xe")</td>
+                                <td>
+                                    @switch (o.Status)
+                                    {
+                                        case OrderStatus.ChoXacNhan:
+                                            <span class="badge bg-warning text-dark">Chờ xác nhận</span>
+                                            break;
+                                        case OrderStatus.DaLienHe:
+                                            <span class="badge bg-info text-dark">Đã liên hệ</span>
+                                            break;
+                                        case OrderStatus.DaXacNhan:
+                                            <span class="badge bg-primary">Đã xác nhận</span>
+                                            break;
+                                        case OrderStatus.DaHoanThanh:
+                                            <span class="badge bg-success">Hoàn thành</span>
+                                            break;
+                                        case OrderStatus.DaHuy:
+                                            <span class="badge bg-danger">Đã hủy</span>
+                                            break;
+                                        default:
+                                            <span class="badge bg-secondary">@o.Status</span>
+                                            break;
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <a asp-action="OrderDetails" asp-route-id="@o.Id" class="btn btn-outline-dark btn-sm py-0">Chi tiết</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Warranty Requests -->
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+            <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold text-dark mb-0"><i class="bi bi-exclamation-octagon text-danger me-2"></i>Yêu Cầu Bảo Hành Mới Nhất</h6>
+                <a asp-action="WarrantyRequests" class="btn btn-outline-dark btn-sm">Xem tất cả</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 small">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Mã yêu cầu</th>
+                            <th>Khách hàng</th>
+                            <th>Trạng thái</th>
+                            <th class="text-end">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var r in Model.RecentWarrantyRequests)
+                        {
+                            <tr>
+                                <td><strong class="text-dark">@r.RequestCode</strong></td>
+                                <td>@(r.Customer?.FullName ?? "KH")<br/><small class="text-muted">@(r.Car?.Name)</small></td>
+                                <td>
+                                    @switch (r.Status)
+                                    {
+                                        case WarrantyRequestStatus.ChoTiepNhan:
+                                            <span class="badge bg-warning text-dark">Chờ tiếp nhận</span>
+                                            break;
+                                        case WarrantyRequestStatus.DaTiepNhan:
+                                            <span class="badge bg-info text-dark">Đã tiếp nhận</span>
+                                            break;
+                                        case WarrantyRequestStatus.DangXuLy:
+                                            <span class="badge bg-primary">Đang xử lý</span>
+                                            break;
+                                        case WarrantyRequestStatus.HoanThanh:
+                                            <span class="badge bg-success">Hoàn thành</span>
+                                            break;
+                                        case WarrantyRequestStatus.TuChoi:
+                                            <span class="badge bg-danger">Từ chối</span>
+                                            break;
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <a asp-action="WarrantyRequestDetails" asp-route-id="@r.Id" class="btn btn-outline-dark btn-sm py-0">Xử lý</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Data from Controller
+        const labels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthlyLabels));
+        const salesData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthlySales));
+        const revenueData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthlyRevenues));
+        const warrantyData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthlyWarrantyRequests));
+
+        // 1. Revenue Chart
+        new Chart(document.getElementById('revenueChart'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Doanh thu (VNĐ)',
+                    data: revenueData,
+                    borderColor: '#0077b6',
+                    backgroundColor: 'rgba(0, 119, 182, 0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    pointBackgroundColor: '#0077b6',
+                    pointRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return (value / 1000000000).toFixed(1) + ' tỷ';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // 2. Car Status Doughnut Chart
+        new Chart(document.getElementById('statusChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Đang kinh doanh', 'Đã bán', 'Đã đặt cọc', 'Ngừng kinh doanh'],
+                datasets: [{
+                    data: [@Model.StatusDangKinhDoanh, @Model.StatusDaBan, @Model.StatusDaDatCoc, @Model.StatusNgungKinhDoanh],
+                    backgroundColor: ['#2ec4b6', '#e63946', '#ff9f1c', '#6c757d']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+
+        // 3. Sales Bar Chart
+        new Chart(document.getElementById('salesChart'), {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Số xe bàn giao',
+                    data: salesData,
+                    backgroundColor: '#198754',
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                }
+            }
+        });
+
+        // 4. Warranty Requests Line Chart
+        new Chart(document.getElementById('warrantyChart'), {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Yêu cầu bảo hành',
+                    data: warrantyData,
+                    backgroundColor: '#dc3545',
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                }
+            }
+        });
+    </script>
+}
+

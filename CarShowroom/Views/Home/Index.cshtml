@@ -1,0 +1,343 @@
+@model CarShowroom.ViewModels.HomeViewModel
+@{
+    ViewData["Title"] = "Trang chủ - Hệ thống Quản lý Xe & Bảo hành";
+}
+
+<!-- Hero Banner Section -->
+<section class="hero-banner">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-7">
+                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold mb-3">
+                    <i class="bi bi-patch-check-fill me-1"></i> AutoCare Showroom Chính Hãng
+                </span>
+                <h1 class="hero-title text-white">
+                    Trải Nghiệm Đẳng Cấp <br />
+                    <span style="color: var(--accent-gold);">Xe Mới & Dịch Vụ Bảo Hành</span> Tiêu Chuẩn
+                </h1>
+                <p class="hero-subtitle">
+                    Hơn 500 mẫu xe đa dạng từ các thương hiệu hàng đầu thế giới. Cam kết xe chất lượng kiểm định 160 điểm, bảo hành chính hãng đến 3 năm và hỗ trợ thủ tục mua xe nhanh chóng.
+                </p>
+                <div class="d-flex flex-wrap gap-3 mb-4">
+                    <a asp-controller="Cars" asp-action="Index" class="btn btn-gold btn-lg px-4 shadow">
+                        <i class="bi bi-car-front-fill me-2"></i> Khám phá xe
+                    </a>
+                    <a asp-controller="Home" asp-action="About" class="btn btn-outline-light btn-lg px-4">
+                        <i class="bi bi-info-circle me-2"></i> Tìm hiểu thêm
+                    </a>
+                </div>
+
+                <!-- Quick Stats Ribbon -->
+                <div class="row g-3 pt-3 border-top border-white-50 text-white">
+                    <div class="col-4">
+                        <h3 class="fw-bold mb-0 text-warning">@Model.TotalCarsCount+</h3>
+                        <small class="text-white-50">Xe tại Showroom</small>
+                    </div>
+                    <div class="col-4">
+                        <h3 class="fw-bold mb-0 text-warning">@Model.TotalCustomersCount+</h3>
+                        <small class="text-white-50">Khách hàng tin tưởng</small>
+                    </div>
+                    <div class="col-4">
+                        <h3 class="fw-bold mb-0 text-warning">3 Năm</h3>
+                        <small class="text-white-50">Bảo hành chính hãng</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Brand Carousel / Grid Section -->
+<section class="py-5 bg-white">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h6 class="text-uppercase text-primary fw-bold mb-1" style="letter-spacing: 1px;">Thương hiệu đối tác</h6>
+                <h2 class="fw-bold text-dark mb-0">Hãng Xe Hàng Đầu</h2>
+            </div>
+            <a asp-controller="Cars" asp-action="Index" class="btn btn-outline-dark btn-sm rounded-pill px-3">
+                Xem tất cả xe <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+
+        <div class="row g-3">
+            @foreach (var brand in Model.Brands)
+            {
+                <div class="col-lg-3 col-md-4 col-6">
+                    <a asp-controller="Cars" asp-action="Index" asp-route-brandId="@brand.Id" class="brand-card h-100">
+                        <div class="d-flex align-items-center justify-content-center mb-2" style="height: 50px;">
+                            <i class="bi bi-award-fill fs-2 text-warning"></i>
+                        </div>
+                        <div class="brand-name text-dark">@brand.Name</div>
+                        <small class="text-muted">@brand.Description</small>
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+<!-- Featured Cars Section -->
+<section class="py-5" style="background-color: #f8f9fa;">
+    <div class="container">
+        <div class="text-center max-w-700 mx-auto mb-5">
+            <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fw-bold mb-2">Bộ sưu tập nổi bật</span>
+            <h2 class="fw-bold text-dark">Mẫu Xe Đang Kinh Doanh Nổi Bật</h2>
+            <p class="text-muted">Các dòng xe mới nhất được khách hàng quan tâm và đăng ký nhiều nhất tại showroom</p>
+        </div>
+
+        <div class="row g-4">
+            @foreach (var car in Model.FeaturedCars)
+            {
+                <div class="col-lg-4 col-md-6">
+                    <div class="car-card">
+                        <div class="car-img-wrapper">
+                            <img src="@(string.IsNullOrEmpty(car.ImageUrl) ? "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80" : car.ImageUrl)" 
+                                 alt="@car.Name" loading="lazy" />
+                            
+                            <!-- Badges -->
+                            @if (car.Status == CarStatus.DangKinhDoanh)
+                            {
+                                <span class="car-badge-status badge-status-available">Còn hàng</span>
+                            }
+                            else if (car.Status == CarStatus.DaBan)
+                            {
+                                <span class="car-badge-status badge-status-sold">Đã bán</span>
+                            }
+                            else if (car.Status == CarStatus.DaDatCoc)
+                            {
+                                <span class="car-badge-status badge-status-deposit">Đã đặt cọc</span>
+                            }
+
+                            <span class="car-badge-brand">@(car.Brand?.Name ?? "Chính hãng")</span>
+                        </div>
+
+                        <div class="car-card-body">
+                            <h5 class="car-name" title="@car.Name">@car.Name</h5>
+                            <div class="car-price">@car.Price.ToString("N0") VNĐ</div>
+
+                            <div class="car-spec-grid">
+                                <div class="car-spec-item">
+                                    <i class="bi bi-calendar3"></i> Năm: <strong>@car.Year</strong>
+                                </div>
+                                <div class="car-spec-item">
+                                    <i class="bi bi-people"></i> Chỗ: <strong>@(car.Seats ?? 5)</strong>
+                                </div>
+                                <div class="car-spec-item">
+                                    <i class="bi bi-gear"></i> Hộp số: <strong>@(car.Transmission ?? "Tự động")</strong>
+                                </div>
+                                <div class="car-spec-item">
+                                    <i class="bi bi-fuel-pump"></i> Nhiên liệu: <strong>@(car.FuelType ?? "Xăng")</strong>
+                                </div>
+                            </div>
+
+                            <div class="mt-auto d-flex gap-2">
+                                <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id" class="btn btn-outline-dark w-50 btn-sm fw-semibold">
+                                    <i class="bi bi-eye me-1"></i> Chi tiết
+                                </a>
+                                @if (car.Status == CarStatus.DangKinhDoanh)
+                                {
+                                    <a asp-controller="Orders" asp-action="Create" asp-route-carId="@car.Id" class="btn btn-gold w-50 btn-sm">
+                                        <i class="bi bi-cart-check me-1"></i> Mua xe
+                                    </a>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-secondary w-50 btn-sm" disabled>
+                                        @car.Status
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="text-center mt-5">
+            <a asp-controller="Cars" asp-action="Index" class="btn btn-navy btn-lg px-5 shadow">
+                Xem toàn bộ danh sách xe <i class="bi bi-arrow-right ms-2"></i>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- About Showroom Section -->
+<section class="py-5 bg-white">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <div class="position-relative">
+                    <img src="https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&w=800&q=80" 
+                         alt="AutoCare Showroom" class="img-fluid rounded-4 shadow-lg w-100" />
+                    <div class="position-absolute bottom-0 start-0 bg-dark text-white p-4 rounded-3 m-3 d-none d-sm-block shadow" style="max-width: 280px; background-color: var(--primary-navy) !important;">
+                        <h4 class="fw-bold text-warning mb-1">10+ Năm</h4>
+                        <p class="mb-0 small text-white-50">Kinh nghiệm phân phối & chăm sóc xe hơi cao cấp</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold mb-2">Về chúng tôi</span>
+                <h2 class="fw-bold text-dark mb-3">AutoCare Showroom - Điểm Đến Đáng Tin Cậy Của Mọi Khách Hàng</h2>
+                <p class="text-muted leading-relaxed mb-4">
+                    Với diện tích trưng bày hơn 3.000m² cùng xưởng dịch vụ kỹ thuật tiêu chuẩn quốc tế, AutoCare Showroom tự hào là đại lý ủy quyền hàng đầu cung cấp các dòng xe Sedan, SUV, Crossover chính hãng từ Toyota, Honda, Mazda, Hyundai, Kia, Mercedes-Benz và BMW.
+                </p>
+                <div class="row g-3 mb-4">
+                    <div class="col-sm-6">
+                        <div class="d-flex align-items-start gap-3">
+                            <div class="p-2 bg-primary bg-opacity-10 text-primary rounded-3 fs-4">
+                                <i class="bi bi-shield-check"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-1">Kiểm định nghiêm ngặt</h6>
+                                <small class="text-muted">160 hạng mục kỹ thuật chuẩn chính hãng trước khi giao xe.</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="d-flex align-items-start gap-3">
+                            <div class="p-2 bg-success bg-opacity-10 text-success rounded-3 fs-4">
+                                <i class="bi bi-cash-coin"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-1">Hỗ trợ trả góp 85%</h6>
+                                <small class="text-muted">Lãi suất ưu đãi chỉ từ 6.9%/năm, xét duyệt nhanh trong 2 giờ.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <a asp-controller="Home" asp-action="About" class="btn btn-outline-dark px-4 fw-semibold">
+                    Xem chi tiết giới thiệu <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Warranty Policy Section -->
+<section class="py-5" style="background-color: var(--primary-navy); color: #fff;">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold mb-3">Chính sách hậu mãi</span>
+                <h2 class="fw-bold text-white mb-3">Bảo Hành Chính Hãng Lên Đến 3 Năm Hoặc 100.000 KM</h2>
+                <p class="text-white-50 leading-relaxed mb-4">
+                    Tại AutoCare Showroom, chiếc xe của bạn luôn được bảo vệ bởi chương trình bảo hành toàn diện và hệ thống quản lý bảo dưỡng số hóa trực tuyến.
+                </p>
+                <ul class="list-unstyled d-flex flex-column gap-3 mb-4">
+                    <li class="d-flex align-items-center gap-3">
+                        <i class="bi bi-check-circle-fill text-warning fs-5"></i>
+                        <span>Bảo hành động cơ, hộp số và toàn bộ hệ thống truyền lực 36 tháng.</span>
+                    </li>
+                    <li class="d-flex align-items-center gap-3">
+                        <i class="bi bi-check-circle-fill text-warning fs-5"></i>
+                        <span>Tra cứu thông tin bảo hành trực tuyến bằng Số VIN hoặc Mã bảo hành bất cứ lúc nào.</span>
+                    </li>
+                    <li class="d-flex align-items-center gap-3">
+                        <i class="bi bi-check-circle-fill text-warning fs-5"></i>
+                        <span>Gửi yêu cầu bảo dưỡng, bảo hành online ngay trên website và theo dõi tiến độ xử lý.</span>
+                    </li>
+                    <li class="d-flex align-items-center gap-3">
+                        <i class="bi bi-check-circle-fill text-warning fs-5"></i>
+                        <span>Cứu hộ khẩn cấp 24/7 trên phạm vi toàn quốc.</span>
+                    </li>
+                </ul>
+                <div class="d-flex gap-3">
+                    <a asp-controller="Warranties" asp-action="Check" class="btn btn-gold fw-bold px-4">
+                        <i class="bi bi-search me-1"></i> Tra cứu bảo hành
+                    </a>
+                    <a asp-controller="Home" asp-action="WarrantyPolicy" class="btn btn-outline-light px-4">
+                        Chính sách chi tiết
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="p-4 rounded-4 bg-white text-dark shadow-lg">
+                    <h5 class="fw-bold text-dark mb-3">
+                        <i class="bi bi-tools text-primary me-2"></i>Quy Trình Bảo Dưỡng Tại Showroom
+                    </h5>
+                    <div class="d-flex flex-column gap-3">
+                        <div class="d-flex gap-3 align-items-start border-bottom pb-3">
+                            <span class="badge bg-primary rounded-circle p-2 px-3 fw-bold">1</span>
+                            <div>
+                                <h6 class="fw-bold mb-1">Đặt lịch hẹn trực tuyến</h6>
+                                <p class="text-muted small mb-0">Khách hàng chọn xe, thời gian và dịch vụ mong muốn trên website.</p>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-3 align-items-start border-bottom pb-3">
+                            <span class="badge bg-primary rounded-circle p-2 px-3 fw-bold">2</span>
+                            <div>
+                                <h6 class="fw-bold mb-1">Tiếp nhận & chẩn đoán xe</h6>
+                                <p class="text-muted small mb-0">Admin xác nhận lịch hẹn, kỹ thuật viên kiểm tra bằng máy quét chuyên dụng.</p>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-3 align-items-start border-bottom pb-3">
+                            <span class="badge bg-primary rounded-circle p-2 px-3 fw-bold">3</span>
+                            <div>
+                                <h6 class="fw-bold mb-1">Bảo dưỡng & phụ tùng chính hãng</h6>
+                                <p class="text-muted small mb-0">Thay dầu, bảo dưỡng hệ thống phanh, điện tử theo đúng quy trình.</p>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-3 align-items-start">
+                            <span class="badge bg-success rounded-circle p-2 px-3 fw-bold">4</span>
+                            <div>
+                                <h6 class="fw-bold mb-1">Bàn giao & lưu lịch sử số hóa</h6>
+                                <p class="text-muted small mb-0">Lịch sử bảo dưỡng được cập nhật vào hồ sơ xe để khách hàng theo dõi trọn đời.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Why Choose Us Section -->
+<section class="py-5 bg-white">
+    <div class="container">
+        <div class="text-center max-w-700 mx-auto mb-5">
+            <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold mb-2">Giá trị cốt lõi</span>
+            <h2 class="fw-bold text-dark">Vì Sao Nên Chọn AutoCare Showroom?</h2>
+            <p class="text-muted">Chúng tôi mang lại giải pháp sở hữu ô tô toàn diện và dịch vụ sau bán hàng an tâm nhất</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-3 col-sm-6">
+                <div class="text-center p-4 rounded-4 border h-100 bg-light">
+                    <div class="fs-1 text-primary mb-3">
+                        <i class="bi bi-file-earmark-check"></i>
+                    </div>
+                    <h5 class="fw-bold">Hồ Sơ Minh Bạch</h5>
+                    <p class="text-muted small mb-0">Số VIN, số khung, số máy và nguồn gốc xuất xứ rõ ràng 100%.</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="text-center p-4 rounded-4 border h-100 bg-light">
+                    <div class="fs-1 text-success mb-3">
+                        <i class="bi bi-wallet2"></i>
+                    </div>
+                    <h5 class="fw-bold">Giá Cả Cạnh Tranh</h5>
+                    <p class="text-muted small mb-0">Báo giá niêm yết công khai, nhiều ưu đãi và hỗ trợ trả góp lãi suất tốt nhất.</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="text-center p-4 rounded-4 border h-100 bg-light">
+                    <div class="fs-1 text-warning mb-3">
+                        <i class="bi bi-shield-lock"></i>
+                    </div>
+                    <h5 class="fw-bold">Bảo Hành Dài Hạn</h5>
+                    <p class="text-muted small mb-0">Chế độ bảo hành 3 năm và theo dõi lịch sử bảo dưỡng trực tuyến minh bạch.</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="text-center p-4 rounded-4 border h-100 bg-light">
+                    <div class="fs-1 text-danger mb-3">
+                        <i class="bi bi-headset"></i>
+                    </div>
+                    <h5 class="fw-bold">Hỗ Trợ 24/7</h5>
+                    <p class="text-muted small mb-0">Đội ngũ chuyên viên tư vấn nhiệt tình, sẵn sàng giải đáp mọi thắc mắc của bạn.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

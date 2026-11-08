@@ -1,0 +1,121 @@
+@model List<CarShowroom.Models.Warranty>
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Quản lý hồ sơ bảo hành";
+    int currentPage = ViewBag.CurrentPage;
+    int totalPages = ViewBag.TotalPages;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h4 class="fw-bold text-dark mb-0"><i class="bi bi-shield-check text-primary me-2"></i>Hồ Sơ Bảo Hành Xe</h4>
+        <small class="text-muted">Tổng cộng: @ViewBag.TotalItems hồ sơ</small>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white">
+    <form method="get" asp-action="Warranties">
+        <div class="row g-2">
+            <div class="col-md-7">
+                <input type="text" name="searchTerm" value="@ViewBag.SearchTerm" class="form-control form-control-sm" placeholder="Tìm theo mã bảo hành, tên khách hàng, số VIN..." />
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-select form-select-sm">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="0" selected="@(ViewBag.Status != null && (int)ViewBag.Status == 0)">Còn hạn</option>
+                    <option value="1" selected="@(ViewBag.Status != null && (int)ViewBag.Status == 1)">Hết hạn</option>
+                    <option value="2" selected="@(ViewBag.Status != null && (int)ViewBag.Status == 2)">Tạm ngừng</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-secondary btn-sm flex-grow-1"><i class="bi bi-search"></i> Tìm</button>
+                <a asp-action="Warranties" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-counterclockwise"></i></a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-3">Mã bảo hành</th>
+                    <th>Xe được bảo hành</th>
+                    <th>Khách hàng</th>
+                    <th>Biển số</th>
+                    <th>Thời hạn</th>
+                    <th>Ngày kết thúc</th>
+                    <th>Trạng thái</th>
+                    <th class="text-end pe-3">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="8" class="text-center py-4 text-muted">Không tìm thấy hồ sơ bảo hành nào.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var w in Model)
+                    {
+                        var remainingDays = (w.EndDate - DateTime.Today).Days;
+                        <tr>
+                            <td class="ps-3"><strong class="text-dark">@w.WarrantyCode</strong></td>
+                            <td>
+                                <strong>@(w.Car?.Name ?? "Xe")</strong>
+                                <small class="text-muted d-block font-monospace">VIN: @(w.Car?.VIN ?? "---")</small>
+                            </td>
+                            <td>
+                                <div>@(w.Customer?.FullName ?? "---")</div>
+                                <small class="text-muted">@(w.Customer?.PhoneNumber)</small>
+                            </td>
+                            <td><span class="badge bg-light text-primary border">@(w.VehicleOwnership?.LicensePlate ?? "Chưa cấp")</span></td>
+                            <td>@w.WarrantyPeriodMonths tháng</td>
+                            <td>
+                                <div>@w.EndDate.ToString("dd/MM/yyyy")</div>
+                                <small class="text-muted">@(remainingDays > 0 ? $"Còn {remainingDays} ngày" : "Đã hết hạn")</small>
+                            </td>
+                            <td>
+                                @switch (w.Status)
+                                {
+                                    case WarrantyStatus.ConHan:
+                                        <span class="badge bg-success">Còn hạn</span>
+                                        break;
+                                    case WarrantyStatus.HetHan:
+                                        <span class="badge bg-secondary">Hết hạn</span>
+                                        break;
+                                    case WarrantyStatus.TamNgung:
+                                        <span class="badge bg-warning text-dark">Tạm ngừng</span>
+                                        break;
+                                }
+                            </td>
+                            <td class="text-end pe-3">
+                                <a asp-action="WarrantyDetails" asp-route-id="@w.Id" class="btn btn-outline-primary btn-sm py-0">
+                                    <i class="bi bi-eye"></i> Chi tiết & Gia hạn
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@if (totalPages > 1)
+{
+    <nav class="d-flex justify-content-center mt-4">
+        <ul class="pagination pagination-sm shadow-sm">
+            @for (int i = 1; i <= totalPages; i++)
+            {
+                <li class="page-item @(currentPage == i ? "active" : "")">
+                    <a class="page-link" asp-action="Warranties" asp-route-page="@i" asp-route-searchTerm="@ViewBag.SearchTerm" asp-route-status="@ViewBag.Status">@i</a>
+                </li>
+            }
+        </ul>
+    </nav>
+}
+

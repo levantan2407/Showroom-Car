@@ -1,0 +1,213 @@
+@model CarShowroom.Models.Customer
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Chi tiết khách hàng " + Model.FullName;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <a asp-action="Customers" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách khách hàng
+    </a>
+    <span class="badge bg-light text-dark border p-2">Mã KH: #@Model.Id</span>
+</div>
+
+<!-- Customer Profile Summary -->
+<div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+    <div class="row align-items-center g-3">
+        <div class="col-md-2 text-center">
+            <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px; font-size: 2.5rem;">
+                <i class="bi bi-person"></i>
+            </div>
+        </div>
+        <div class="col-md-5">
+            <h4 class="fw-bold text-dark mb-1">@Model.FullName</h4>
+            <div class="text-muted small mb-1"><i class="bi bi-envelope me-1"></i>@Model.Email</div>
+            <div class="text-muted small mb-1"><i class="bi bi-telephone me-1"></i>@(Model.PhoneNumber ?? "Chưa cập nhật")</div>
+            <div class="text-muted small"><i class="bi bi-geo-alt me-1"></i>@(Model.Address ?? "Chưa cập nhật")</div>
+        </div>
+        <div class="col-md-5 text-md-end border-start ps-md-4">
+            <div class="row g-2 text-center">
+                <div class="col-4">
+                    <h4 class="fw-bold text-primary mb-0">@Model.Orders.Count</h4>
+                    <small class="text-muted">Đơn đăng ký</small>
+                </div>
+                <div class="col-4">
+                    <h4 class="fw-bold text-success mb-0">@Model.VehicleOwnerships.Count</h4>
+                    <small class="text-muted">Xe đã mua</small>
+                </div>
+                <div class="col-4">
+                    <h4 class="fw-bold text-warning mb-0">@Model.MaintenanceHistories.Count</h4>
+                    <small class="text-muted">Lần bảo dưỡng</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabs for Histories -->
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+    <div class="card-header bg-white border-bottom p-0">
+        <ul class="nav nav-tabs card-header-tabs m-0 px-3" id="customerTab" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link active py-3 fw-semibold" id="cars-tab" data-bs-toggle="tab" data-bs-target="#cars" type="button"><i class="bi bi-car-front me-2"></i>Xe Đã Mua (@Model.VehicleOwnerships.Count)</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link py-3 fw-semibold" id="orders-tab" data-bs-toggle="tab" data-bs-target="#orders" type="button"><i class="bi bi-receipt me-2"></i>Đơn Đăng Ký (@Model.Orders.Count)</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link py-3 fw-semibold" id="warranties-tab" data-bs-toggle="tab" data-bs-target="#warranties" type="button"><i class="bi bi-shield-check me-2"></i>Hồ Sơ Bảo Hành (@Model.Warranties.Count)</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link py-3 fw-semibold" id="maintenance-tab" data-bs-toggle="tab" data-bs-target="#maintenance" type="button"><i class="bi bi-tools me-2"></i>Lịch Sử Bảo Dưỡng (@Model.MaintenanceHistories.Count)</button>
+            </li>
+        </ul>
+    </div>
+    <div class="card-body p-4">
+        <div class="tab-content" id="customerTabContent">
+            <!-- 1. Owned Cars -->
+            <div class="tab-pane fade show active" id="cars" role="tabpanel">
+                @if (!Model.VehicleOwnerships.Any())
+                {
+                    <p class="text-muted text-center py-3 mb-0">Khách hàng chưa sở hữu chiếc xe nào.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 small">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Xe</th>
+                                    <th>Biển số</th>
+                                    <th>Số VIN</th>
+                                    <th>Ngày mua</th>
+                                    <th>Giá mua</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var vo in Model.VehicleOwnerships)
+                                {
+                                    <tr>
+                                        <td><strong>@(vo.Car?.Name ?? "Xe")</strong></td>
+                                        <td><span class="badge bg-light text-primary border">@(vo.LicensePlate ?? "Chưa cấp")</span></td>
+                                        <td class="font-monospace">@(vo.Car?.VIN ?? "---")</td>
+                                        <td>@vo.PurchaseDate.ToString("dd/MM/yyyy")</td>
+                                        <td><strong class="text-danger">@vo.PurchasePrice.ToString("N0") VNĐ</strong></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+
+            <!-- 2. Orders -->
+            <div class="tab-pane fade" id="orders" role="tabpanel">
+                @if (!Model.Orders.Any())
+                {
+                    <p class="text-muted text-center py-3 mb-0">Chưa có đơn đăng ký mua xe.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 small">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Mã đơn</th>
+                                    <th>Xe đăng ký</th>
+                                    <th>Ngày gửi</th>
+                                    <th>Hình thức</th>
+                                    <th>Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var o in Model.Orders)
+                                {
+                                    <tr>
+                                        <td><strong class="text-primary">@o.OrderCode</strong></td>
+                                        <td>@(o.Car?.Name ?? "Xe")</td>
+                                        <td>@o.CreatedAt.ToString("dd/MM/yyyy")</td>
+                                        <td>@(o.PaymentMethod == PaymentMethod.TienMat ? "Tiền mặt" : "Trả góp")</td>
+                                        <td><span class="badge bg-secondary">@o.Status</span></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+
+            <!-- 3. Warranties -->
+            <div class="tab-pane fade" id="warranties" role="tabpanel">
+                @if (!Model.Warranties.Any())
+                {
+                    <p class="text-muted text-center py-3 mb-0">Không có hồ sơ bảo hành nào.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 small">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Mã BH</th>
+                                    <th>Xe</th>
+                                    <th>Từ ngày</th>
+                                    <th>Đến ngày</th>
+                                    <th>Thời hạn</th>
+                                    <th>Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var w in Model.Warranties)
+                                {
+                                    <tr>
+                                        <td><strong class="text-dark">@w.WarrantyCode</strong></td>
+                                        <td>@(w.Car?.Name ?? "Xe")</td>
+                                        <td>@w.StartDate.ToString("dd/MM/yyyy")</td>
+                                        <td>@w.EndDate.ToString("dd/MM/yyyy")</td>
+                                        <td>@w.WarrantyPeriodMonths tháng</td>
+                                        <td><span class="badge bg-success">@w.Status</span></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+
+            <!-- 4. Maintenance -->
+            <div class="tab-pane fade" id="maintenance" role="tabpanel">
+                @if (!Model.MaintenanceHistories.Any())
+                {
+                    <p class="text-muted text-center py-3 mb-0">Chưa có lịch sử bảo dưỡng nào.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 small">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Ngày</th>
+                                    <th>Xe</th>
+                                    <th>Nội dung</th>
+                                    <th>Chi phí</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var h in Model.MaintenanceHistories)
+                                {
+                                    <tr>
+                                        <td>@h.MaintenanceDate.ToString("dd/MM/yyyy")</td>
+                                        <td>@(h.Car?.Name ?? "Xe")</td>
+                                        <td>@h.Content</td>
+                                        <td>@(h.Cost.HasValue ? h.Cost.Value.ToString("N0") + " VNĐ" : "Miễn phí")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+

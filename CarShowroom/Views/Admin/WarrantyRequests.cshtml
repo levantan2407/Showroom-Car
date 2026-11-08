@@ -1,0 +1,122 @@
+@model List<CarShowroom.Models.WarrantyRequest>
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Quản lý yêu cầu bảo hành";
+    int currentPage = ViewBag.CurrentPage;
+    int totalPages = ViewBag.TotalPages;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h4 class="fw-bold text-dark mb-0"><i class="bi bi-tools text-danger me-2"></i>Danh Sách Yêu Cầu Bảo Hành</h4>
+        <small class="text-muted">Tổng cộng: @ViewBag.TotalItems yêu cầu</small>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white">
+    <form method="get" asp-action="WarrantyRequests">
+        <div class="row g-2">
+            <div class="col-md-9">
+                <select name="status" class="form-select form-select-sm">
+                    <option value="">Tất cả trạng thái yêu cầu</option>
+                    <option value="0" selected="@(ViewBag.Status != null && (int)ViewBag.Status == 0)">Chờ tiếp nhận</option>
+                    <option value="1" selected="@(ViewBag.Status != null && (int)ViewBag.Status == 1)">Đã tiếp nhận</option>
+                    <option value="2" selected="@(ViewBag.Status != null && (int)ViewBag.Status == 2)">Đang xử lý</option>
+                    <option value="3" selected="@(ViewBag.Status != null && (int)ViewBag.Status == 3)">Hoàn thành</option>
+                    <option value="4" selected="@(ViewBag.Status != null && (int)ViewBag.Status == 4)">Từ chối</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-secondary btn-sm flex-grow-1"><i class="bi bi-funnel"></i> Lọc</button>
+                <a asp-action="WarrantyRequests" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-counterclockwise"></i></a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-3">Mã yêu cầu</th>
+                    <th>Khách hàng</th>
+                    <th>Xe gặp sự cố</th>
+                    <th>Mô tả sự cố</th>
+                    <th>Ngày hẹn tiếp nhận</th>
+                    <th>Trạng thái</th>
+                    <th class="text-end pe-3">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">Không tìm thấy yêu cầu bảo hành nào.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var r in Model)
+                    {
+                        <tr>
+                            <td class="ps-3"><strong class="text-dark">@r.RequestCode</strong></td>
+                            <td>
+                                <div><strong>@(r.Customer?.FullName ?? "---")</strong></div>
+                                <small class="text-muted">@(r.Customer?.PhoneNumber)</small>
+                            </td>
+                            <td>
+                                <strong>@(r.Car?.Name ?? "Xe")</strong>
+                                <small class="text-muted d-block font-monospace">VIN: @(r.Car?.VIN ?? "---")</small>
+                            </td>
+                            <td>
+                                <p class="mb-0 text-dark small" style="max-width: 250px;">@r.IssueDescription</p>
+                            </td>
+                            <td>@(r.PreferredDate?.ToString("dd/MM/yyyy") ?? "---")</td>
+                            <td>
+                                @switch (r.Status)
+                                {
+                                    case WarrantyRequestStatus.ChoTiepNhan:
+                                        <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>Chờ tiếp nhận</span>
+                                        break;
+                                    case WarrantyRequestStatus.DaTiepNhan:
+                                        <span class="badge bg-info text-dark"><i class="bi bi-inbox me-1"></i>Đã tiếp nhận</span>
+                                        break;
+                                    case WarrantyRequestStatus.DangXuLy:
+                                        <span class="badge bg-primary"><i class="bi bi-gear-wide-connected me-1"></i>Đang xử lý</span>
+                                        break;
+                                    case WarrantyRequestStatus.HoanThanh:
+                                        <span class="badge bg-success"><i class="bi bi-check2-all me-1"></i>Hoàn thành</span>
+                                        break;
+                                    case WarrantyRequestStatus.TuChoi:
+                                        <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Từ chối</span>
+                                        break;
+                                }
+                            </td>
+                            <td class="text-end pe-3">
+                                <a asp-action="WarrantyRequestDetails" asp-route-id="@r.Id" class="btn btn-outline-primary btn-sm py-0">
+                                    <i class="bi bi-gear"></i> Xử lý
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@if (totalPages > 1)
+{
+    <nav class="d-flex justify-content-center mt-4">
+        <ul class="pagination pagination-sm shadow-sm">
+            @for (int i = 1; i <= totalPages; i++)
+            {
+                <li class="page-item @(currentPage == i ? "active" : "")">
+                    <a class="page-link" asp-action="WarrantyRequests" asp-route-page="@i" asp-route-status="@ViewBag.Status">@i</a>
+                </li>
+            }
+        </ul>
+    </nav>
+}
+
