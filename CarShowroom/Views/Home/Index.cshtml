@@ -8,12 +8,12 @@
     <div class="container">
         <div class="row align-items-center">
             <div class="col-lg-7">
-                <span class="badge bg-white text-primary px-3 py-2 rounded-pill fw-bold mb-3 shadow-sm">
+                <span class="badge hero-badge px-3 py-2 rounded-pill fw-bold mb-3 shadow-sm">
                     <i class="bi bi-patch-check-fill me-1 text-primary"></i> AutoCare Showroom Chính Hãng
                 </span>
                 <h1 class="hero-title text-white">
                     Trải Nghiệm Đẳng Cấp <br />
-                    <span style="color: #c7d2fe;">Xe Mới & Dịch Vụ Bảo Hành</span> Tiêu Chuẩn
+                    <span class="hero-highlight">Xe Mới & Dịch Vụ Bảo Hành</span> Tiêu Chuẩn
                 </h1>
                 <p class="hero-subtitle">
                     Hơn 500 mẫu xe đa dạng từ các thương hiệu hàng đầu thế giới. Cam kết xe chất lượng kiểm định 160 điểm, bảo hành chính hãng đến 3 năm và hỗ trợ thủ tục mua xe nhanh chóng.
@@ -22,24 +22,24 @@
                     <a asp-controller="Cars" asp-action="Index" class="btn btn-gold btn-lg px-4 shadow">
                         <i class="bi bi-car-front-fill me-2"></i> Khám phá xe
                     </a>
-                    <a asp-controller="Home" asp-action="About" class="btn btn-outline-light btn-lg px-4">
+                    <a asp-controller="Home" asp-action="About" class="btn btn-outline-light btn-lg px-4 hero-btn-secondary">
                         <i class="bi bi-info-circle me-2"></i> Tìm hiểu thêm
                     </a>
                 </div>
 
                 <!-- Quick Stats Ribbon -->
-                <div class="row g-3 pt-3 border-top border-white-50 text-white">
+                <div class="row g-3 pt-3 hero-stats-ribbon text-white">
                     <div class="col-4">
                         <h3 class="fw-bold mb-0 text-white">@Model.TotalCarsCount+</h3>
-                        <small class="text-white-50">Xe tại Showroom</small>
+                        <small class="hero-stat-label">Xe tại Showroom</small>
                     </div>
                     <div class="col-4">
                         <h3 class="fw-bold mb-0 text-white">@Model.TotalCustomersCount+</h3>
-                        <small class="text-white-50">Khách hàng tin tưởng</small>
+                        <small class="hero-stat-label">Khách hàng tin tưởng</small>
                     </div>
                     <div class="col-4">
                         <h3 class="fw-bold mb-0 text-white">3 Năm</h3>
-                        <small class="text-white-50">Bảo hành chính hãng</small>
+                        <small class="hero-stat-label">Bảo hành chính hãng</small>
                     </div>
                 </div>
             </div>
