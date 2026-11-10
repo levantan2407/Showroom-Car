@@ -88,7 +88,13 @@ namespace CarShowroom.Controllers
             // Generate unique appointment code: APT-yyyyMMdd-XXX
             var todayStr = DateTime.Now.ToString("yyyyMMdd");
             var countToday = await _context.MaintenanceAppointments.CountAsync(a => a.AppointmentCode.StartsWith($"APT-{todayStr}"));
-            var appointmentCode = $"APT-{todayStr}-{(countToday + 1):D3}";
+            var seq = countToday + 1;
+            var appointmentCode = $"APT-{todayStr}-{seq:D3}";
+            while (await _context.MaintenanceAppointments.AnyAsync(a => a.AppointmentCode == appointmentCode))
+            {
+                seq++;
+                appointmentCode = $"APT-{todayStr}-{seq:D3}";
+            }
 
             var appointment = new MaintenanceAppointment
             {
@@ -116,9 +122,10 @@ namespace CarShowroom.Controllers
         {
             var user = await _userManager.GetUserAsync(User);
             var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == user!.Id);
+            if (customer == null) return NotFound();
 
             var appointment = await _context.MaintenanceAppointments
-                .FirstOrDefaultAsync(a => a.Id == id && a.CustomerId == customer!.Id);
+                .FirstOrDefaultAsync(a => a.Id == id && a.CustomerId == customer.Id);
 
             if (appointment == null) return NotFound();
 

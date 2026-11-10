@@ -37,7 +37,7 @@ namespace CarShowroom.Controllers
                 TotalCarsCount = await _context.Cars.CountAsync(),
                 TotalSoldCount = await _context.Cars.CountAsync(c => c.Status == CarStatus.DaBan),
                 TotalCustomersCount = await _context.Customers.CountAsync(),
-                ActiveWarrantiesCount = await _context.Warranties.CountAsync(w => w.Status == WarrantyStatus.ConHan)
+                ActiveWarrantiesCount = await _context.Warranties.CountAsync(w => w.Status == WarrantyStatus.ConHan && w.EndDate >= DateTime.Today)
             };
 
             return View(viewModel);

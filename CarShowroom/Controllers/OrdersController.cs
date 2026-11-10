@@ -118,7 +118,13 @@ namespace CarShowroom.Controllers
             // Generate Unique Order Code: ORD-yyyyMMdd-XXX
             var todayStr = DateTime.Now.ToString("yyyyMMdd");
             var countToday = await _context.Orders.CountAsync(o => o.OrderCode.StartsWith($"ORD-{todayStr}"));
-            var orderCode = $"ORD-{todayStr}-{(countToday + 1):D3}";
+            var seq = countToday + 1;
+            var orderCode = $"ORD-{todayStr}-{seq:D3}";
+            while (await _context.Orders.AnyAsync(o => o.OrderCode == orderCode))
+            {
+                seq++;
+                orderCode = $"ORD-{todayStr}-{seq:D3}";
+            }
 
             var order = new Order
             {
@@ -149,11 +155,12 @@ namespace CarShowroom.Controllers
         {
             var user = await _userManager.GetUserAsync(User);
             var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == user!.Id);
+            if (customer == null) return NotFound();
 
             var order = await _context.Orders
                 .Include(o => o.Car)
                     .ThenInclude(c => c!.Brand)
-                .FirstOrDefaultAsync(o => o.Id == id && o.CustomerId == customer!.Id);
+                .FirstOrDefaultAsync(o => o.Id == id && o.CustomerId == customer.Id);
 
             if (order == null) return NotFound();
 
@@ -184,12 +191,13 @@ namespace CarShowroom.Controllers
         {
             var user = await _userManager.GetUserAsync(User);
             var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == user!.Id);
+            if (customer == null) return NotFound();
 
             var order = await _context.Orders
                 .Include(o => o.Car)
                     .ThenInclude(c => c!.Brand)
                 .Include(o => o.VehicleOwnership)
-                .FirstOrDefaultAsync(o => o.Id == id && o.CustomerId == customer!.Id);
+                .FirstOrDefaultAsync(o => o.Id == id && o.CustomerId == customer.Id);
 
             if (order == null) return NotFound();
 
@@ -211,6 +219,12 @@ namespace CarShowroom.Controllers
             if (order.Status == OrderStatus.DaHoanThanh || order.Status == OrderStatus.DaHuy)
             {
                 TempData["ErrorMessage"] = "Đơn hàng này không thể gửi yêu cầu hủy vì đã hoàn tất hoặc đã bị hủy trước đó.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            if (order.IsCancelRequested)
+            {
+                TempData["ErrorMessage"] = "Đơn hàng này đã có yêu cầu hủy đang chờ Showroom xử lý.";
                 return RedirectToAction(nameof(Details), new { id });
             }
 

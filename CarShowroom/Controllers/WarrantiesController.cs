@@ -81,13 +81,14 @@ namespace CarShowroom.Controllers
         {
             var user = await _userManager.GetUserAsync(User);
             var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == user!.Id);
+            var customerId = customer?.Id ?? 0;
 
             var warranty = await _context.Warranties
                 .Include(w => w.Car)
                     .ThenInclude(c => c!.Brand)
                 .Include(w => w.VehicleOwnership)
                 .Include(w => w.WarrantyRequests)
-                .FirstOrDefaultAsync(w => w.Id == id && (w.CustomerId == customer!.Id || User.IsInRole("Admin")));
+                .FirstOrDefaultAsync(w => w.Id == id && (w.CustomerId == customerId || User.IsInRole("Admin")));
 
             if (warranty == null) return NotFound();
 
@@ -166,7 +167,13 @@ namespace CarShowroom.Controllers
             // Generate unique request code: REQ-yyyyMMdd-XXX
             var todayStr = DateTime.Now.ToString("yyyyMMdd");
             var countToday = await _context.WarrantyRequests.CountAsync(r => r.RequestCode.StartsWith($"REQ-{todayStr}"));
-            var requestCode = $"REQ-{todayStr}-{(countToday + 1):D3}";
+            var seq = countToday + 1;
+            var requestCode = $"REQ-{todayStr}-{seq:D3}";
+            while (await _context.WarrantyRequests.AnyAsync(r => r.RequestCode == requestCode))
+            {
+                seq++;
+                requestCode = $"REQ-{todayStr}-{seq:D3}";
+            }
 
             var request = new WarrantyRequest
             {

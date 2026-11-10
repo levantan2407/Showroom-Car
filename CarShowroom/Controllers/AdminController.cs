@@ -32,6 +32,10 @@ namespace CarShowroom.Controllers
         [HttpGet]
         public async Task<IActionResult> Dashboard()
         {
+            await _context.Warranties
+                .Where(w => w.Status == WarrantyStatus.ConHan && w.EndDate < DateTime.Today)
+                .ExecuteUpdateAsync(s => s.SetProperty(w => w.Status, WarrantyStatus.HetHan));
+
             var now = DateTime.Now;
 
             // Stats counts
@@ -184,7 +188,14 @@ namespace CarShowroom.Controllers
             if (string.IsNullOrWhiteSpace(model.Car.CarCode))
             {
                 var count = await _context.Cars.CountAsync();
-                model.Car.CarCode = $"CAR-{(count + 1):D4}";
+                var seq = count + 1;
+                var carCode = $"CAR-{seq:D4}";
+                while (await _context.Cars.AnyAsync(c => c.CarCode == carCode))
+                {
+                    seq++;
+                    carCode = $"CAR-{seq:D4}";
+                }
+                model.Car.CarCode = carCode;
             }
 
             if (await _context.Cars.AnyAsync(c => c.CarCode == model.Car.CarCode))
@@ -283,6 +294,11 @@ namespace CarShowroom.Controllers
                 }
             }
 
+            if (model.Car.Status != CarStatus.DaBan && await _context.VehicleOwnerships.AnyAsync(vo => vo.CarId == id))
+            {
+                ModelState.AddModelError("Car.Status", "Xe này đã có hồ sơ sở hữu của khách hàng, không thể đổi trạng thái khác 'Đã bán'.");
+            }
+
             if (model.ImageFile != null && model.ImageFile.Length > 0)
             {
                 var ext = Path.GetExtension(model.ImageFile.FileName).ToLowerInvariant();
@@ -355,13 +371,16 @@ namespace CarShowroom.Controllers
             var car = await _context.Cars.FindAsync(id);
             if (car == null) return NotFound();
 
-            // Constraint check: cannot delete if vehicle has orders or ownerships
+            // Constraint check: cannot delete if vehicle has orders, ownerships, warranties, appointments or histories
             var hasOrders = await _context.Orders.AnyAsync(o => o.CarId == id);
             var hasOwnership = await _context.VehicleOwnerships.AnyAsync(vo => vo.CarId == id);
+            var hasWarranties = await _context.Warranties.AnyAsync(w => w.CarId == id);
+            var hasAppointments = await _context.MaintenanceAppointments.AnyAsync(a => a.CarId == id);
+            var hasHistories = await _context.MaintenanceHistories.AnyAsync(h => h.CarId == id);
 
-            if (hasOrders || hasOwnership)
+            if (hasOrders || hasOwnership || hasWarranties || hasAppointments || hasHistories)
             {
-                TempData["ErrorMessage"] = "Không thể xóa xe này vì đã phát sinh đơn hàng hoặc hồ sơ sở hữu liên quan. Bạn có thể đổi trạng thái xe sang 'Ngừng kinh doanh'.";
+                TempData["ErrorMessage"] = "Không thể xóa xe này vì đã phát sinh dữ liệu liên quan trong hệ thống. Bạn có thể đổi trạng thái xe sang 'Ngừng kinh doanh'.";
                 return RedirectToAction(nameof(Cars));
             }
 
@@ -449,9 +468,9 @@ namespace CarShowroom.Controllers
             var brand = await _context.CarBrands.FindAsync(id);
             if (brand == null) return NotFound();
 
-            if (await _context.Cars.AnyAsync(c => c.BrandId == id))
+            if (await _context.Cars.AnyAsync(c => c.BrandId == id) || await _context.CarModels.AnyAsync(m => m.BrandId == id))
             {
-                TempData["ErrorMessage"] = "Không thể xóa hãng xe này vì đang có xe thuộc hãng trong hệ thống.";
+                TempData["ErrorMessage"] = "Không thể xóa hãng xe này vì đang có dòng xe hoặc mẫu xe thuộc hãng trong hệ thống.";
                 return RedirectToAction(nameof(Categories));
             }
 
@@ -468,9 +487,9 @@ namespace CarShowroom.Controllers
             var category = await _context.CarCategories.FindAsync(id);
             if (category == null) return NotFound();
 
-            if (await _context.Cars.AnyAsync(c => c.CategoryId == id))
+            if (await _context.Cars.AnyAsync(c => c.CategoryId == id) || await _context.CarModels.AnyAsync(m => m.CategoryId == id))
             {
-                TempData["ErrorMessage"] = "Không thể xóa loại xe này vì đang có xe thuộc loại trong hệ thống.";
+                TempData["ErrorMessage"] = "Không thể xóa loại xe này vì đang có dòng xe hoặc mẫu xe thuộc loại này trong hệ thống.";
                 return RedirectToAction(nameof(Categories));
             }
 
@@ -603,7 +622,7 @@ namespace CarShowroom.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> OrderUpdateStatus(int id, OrderStatus status, string? adminNotes)
         {
-            var order = await _context.Orders.FindAsync(id);
+            var order = await _context.Orders.Include(o => o.Car).FirstOrDefaultAsync(o => o.Id == id);
             if (order == null) return NotFound();
 
             if (order.Status == OrderStatus.DaHoanThanh || order.Status == OrderStatus.DaHuy)
@@ -621,6 +640,32 @@ namespace CarShowroom.Controllers
             order.Status = status;
             order.AdminNotes = adminNotes;
             order.UpdatedAt = DateTime.Now;
+
+            // Đồng bộ trạng thái xe theo tiến trình đơn hàng
+            if (order.Car != null)
+            {
+                if (status == OrderStatus.DaXacNhan || status == OrderStatus.DangHoanTat)
+                {
+                    if (order.Car.Status == CarStatus.DangKinhDoanh)
+                    {
+                        order.Car.Status = CarStatus.DaDatCoc;
+                        order.Car.UpdatedAt = DateTime.Now;
+                    }
+                }
+                else if (status == OrderStatus.DaLienHe && order.Car.Status == CarStatus.DaDatCoc)
+                {
+                    var hasOtherActiveOrders = await _context.Orders.AnyAsync(o => 
+                        o.CarId == order.CarId && 
+                        o.Id != order.Id && 
+                        (o.Status == OrderStatus.DaXacNhan || o.Status == OrderStatus.DangHoanTat));
+
+                    if (!hasOtherActiveOrders)
+                    {
+                        order.Car.Status = CarStatus.DangKinhDoanh;
+                        order.Car.UpdatedAt = DateTime.Now;
+                    }
+                }
+            }
 
             await _context.SaveChangesAsync();
             TempData["SuccessMessage"] = $"Cập nhật trạng thái đơn '{order.OrderCode}' thành '{status}' thành công!";
@@ -656,6 +701,18 @@ namespace CarShowroom.Controllers
             if (string.IsNullOrWhiteSpace(licensePlate))
             {
                 TempData["ErrorMessage"] = "Biển số xe bàn giao không được để trống.";
+                return RedirectToAction(nameof(OrderDetails), new { id });
+            }
+
+            if (await _context.VehicleOwnerships.AnyAsync(vo => vo.LicensePlate != null && vo.LicensePlate.ToLower() == licensePlate.Trim().ToLower() && vo.CarId != car.Id))
+            {
+                TempData["ErrorMessage"] = "Biển số xe này đã được đăng ký cho một phương tiện khác trong hệ thống.";
+                return RedirectToAction(nameof(OrderDetails), new { id });
+            }
+
+            if (purchasePrice.HasValue && purchasePrice.Value <= 0)
+            {
+                TempData["ErrorMessage"] = "Giá bán thực tế phải lớn hơn 0 VNĐ.";
                 return RedirectToAction(nameof(OrderDetails), new { id });
             }
 
@@ -695,8 +752,15 @@ namespace CarShowroom.Controllers
                 await _context.SaveChangesAsync();
 
                 // 4. Luôn tạo mới hồ sơ bảo hành cho xe
-                var countWrt = await _context.Warranties.CountAsync();
-                var warrantyCode = $"WRT-{DateTime.Now.Year}-{(countWrt + 1):D3}";
+                var year = DateTime.Now.Year;
+                var countWrt = await _context.Warranties.CountAsync(w => w.WarrantyCode.StartsWith($"WRT-{year}"));
+                var seqWrt = countWrt + 1;
+                var warrantyCode = $"WRT-{year}-{seqWrt:D3}";
+                while (await _context.Warranties.AnyAsync(w => w.WarrantyCode == warrantyCode))
+                {
+                    seqWrt++;
+                    warrantyCode = $"WRT-{year}-{seqWrt:D3}";
+                }
 
                 var warranty = new Warranty
                 {
@@ -764,9 +828,15 @@ namespace CarShowroom.Controllers
             var order = await _context.Orders.Include(o => o.Car).FirstOrDefaultAsync(o => o.Id == id);
             if (order == null) return NotFound();
 
-            if (order.Status == OrderStatus.DaHoanThanh)
+            if (order.Status == OrderStatus.DaHoanThanh || order.Status == OrderStatus.DaHuy)
             {
-                TempData["ErrorMessage"] = "Đơn hàng đã hoàn thành, không thể duyệt hủy.";
+                TempData["ErrorMessage"] = "Không thể duyệt hủy đơn hàng đã hoàn thành hoặc đã bị hủy trước đó.";
+                return RedirectToAction(nameof(OrderDetails), new { id });
+            }
+
+            if (!order.IsCancelRequested)
+            {
+                TempData["ErrorMessage"] = "Đơn hàng này hiện không có yêu cầu hủy nào cần duyệt.";
                 return RedirectToAction(nameof(OrderDetails), new { id });
             }
 
@@ -794,6 +864,18 @@ namespace CarShowroom.Controllers
         {
             var order = await _context.Orders.FindAsync(id);
             if (order == null) return NotFound();
+
+            if (order.Status == OrderStatus.DaHoanThanh || order.Status == OrderStatus.DaHuy)
+            {
+                TempData["ErrorMessage"] = "Không thể xử lý yêu cầu hủy cho đơn hàng đã hoàn thành hoặc đã bị hủy trước đó.";
+                return RedirectToAction(nameof(OrderDetails), new { id });
+            }
+
+            if (!order.IsCancelRequested)
+            {
+                TempData["ErrorMessage"] = "Đơn hàng này hiện không có yêu cầu hủy nào đang chờ xử lý.";
+                return RedirectToAction(nameof(OrderDetails), new { id });
+            }
 
             order.IsCancelRequested = false;
             var note = !string.IsNullOrWhiteSpace(rejectReason) 
@@ -1068,6 +1150,18 @@ namespace CarShowroom.Controllers
             var appt = await _context.MaintenanceAppointments.FindAsync(id);
             if (appt == null) return NotFound();
 
+            if (appt.Status != AppointmentStatus.ChoXacNhan)
+            {
+                TempData["ErrorMessage"] = "Chỉ có thể xác nhận lịch bảo dưỡng khi đang ở trạng thái 'Chờ xác nhận'.";
+                return RedirectToAction(nameof(Appointments));
+            }
+
+            if (estimatedCost.HasValue && estimatedCost.Value < 0)
+            {
+                TempData["ErrorMessage"] = "Chi phí dự kiến không thể là số âm.";
+                return RedirectToAction(nameof(Appointments));
+            }
+
             appt.Status = AppointmentStatus.DaXacNhan;
             appt.AdminNotes = adminNotes;
             appt.EstimatedCost = estimatedCost;
@@ -1109,6 +1203,12 @@ namespace CarShowroom.Controllers
             if (string.IsNullOrWhiteSpace(rejectReason))
             {
                 TempData["ErrorMessage"] = "Vui lòng nhập lý do từ chối lịch hẹn.";
+                return RedirectToAction(nameof(Appointments));
+            }
+
+            if (appt.Status == AppointmentStatus.DangThucHien)
+            {
+                TempData["ErrorMessage"] = "Không thể từ chối lịch hẹn đang trong quá trình thực hiện.";
                 return RedirectToAction(nameof(Appointments));
             }
 
@@ -1219,12 +1319,24 @@ namespace CarShowroom.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> MaintenanceHistoryCreate(int carId, int customerId, DateTime maintenanceDate, string content, decimal? cost, string? notes)
         {
+            if (string.IsNullOrWhiteSpace(content))
+            {
+                TempData["ErrorMessage"] = "Nội dung bảo dưỡng không được để trống.";
+                return RedirectToAction(nameof(MaintenanceHistories));
+            }
+
+            if (cost.HasValue && cost.Value < 0)
+            {
+                TempData["ErrorMessage"] = "Chi phí bảo dưỡng không thể là số âm.";
+                return RedirectToAction(nameof(MaintenanceHistories));
+            }
+
             var history = new MaintenanceHistory
             {
                 CarId = carId,
                 CustomerId = customerId,
                 MaintenanceDate = maintenanceDate,
-                Content = content,
+                Content = content.Trim(),
                 Cost = cost,
                 Notes = notes,
                 CreatedAt = DateTime.Now
@@ -1298,6 +1410,10 @@ namespace CarShowroom.Controllers
         [HttpGet]
         public async Task<IActionResult> Reports(int? year, int? month)
         {
+            await _context.Warranties
+                .Where(w => w.Status == WarrantyStatus.ConHan && w.EndDate < DateTime.Today)
+                .ExecuteUpdateAsync(s => s.SetProperty(w => w.Status, WarrantyStatus.HetHan));
+
             var targetYear = year ?? DateTime.Now.Year;
             var targetMonth = month;
 
