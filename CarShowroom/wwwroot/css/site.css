@@ -138,7 +138,7 @@ body {
         url('https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=2000&q=85') right center / cover no-repeat;
     color: #ffffff;
     padding: 105px 0 95px 0;
-    border-radius: 0 0 24px 24px;
+    border-radius: 0;
     overflow: hidden;
     box-shadow: 0 12px 35px rgba(11, 17, 32, 0.20);
 }
