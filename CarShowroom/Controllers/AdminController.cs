@@ -1476,16 +1476,20 @@ namespace CarShowroom.Controllers
                 ownershipsQuery = ownershipsQuery.Where(vo => vo.PurchaseDate.Month == targetMonth.Value);
             }
 
-            var soldCars = await ownershipsQuery.ToListAsync();
+            var soldCars = await ownershipsQuery.OrderByDescending(vo => vo.PurchaseDate).ToListAsync();
             var totalRevenue = soldCars.Sum(vo => vo.PurchasePrice);
 
             // Maintenance cost
-            var maintenanceQuery = _context.MaintenanceHistories.Where(h => h.MaintenanceDate.Year == targetYear);
+            var maintenanceQuery = _context.MaintenanceHistories
+                .Include(h => h.Car)
+                .Include(h => h.Customer)
+                .Where(h => h.MaintenanceDate.Year == targetYear);
+
             if (targetMonth.HasValue && targetMonth.Value > 0)
             {
                 maintenanceQuery = maintenanceQuery.Where(h => h.MaintenanceDate.Month == targetMonth.Value);
             }
-            var maintenanceRecords = await maintenanceQuery.ToListAsync();
+            var maintenanceRecords = await maintenanceQuery.OrderByDescending(h => h.MaintenanceDate).ToListAsync();
             var totalMaintenanceCost = maintenanceRecords.Sum(h => h.Cost ?? 0);
 
             // Warranty statistics
@@ -1495,6 +1499,7 @@ namespace CarShowroom.Controllers
             ViewBag.SelectedYear = targetYear;
             ViewBag.SelectedMonth = targetMonth;
             ViewBag.SoldCars = soldCars;
+            ViewBag.MaintenanceRecords = maintenanceRecords;
             ViewBag.TotalRevenue = totalRevenue;
             ViewBag.TotalSold = soldCars.Count;
             ViewBag.TotalMaintenanceRecords = maintenanceRecords.Count;
@@ -1503,6 +1508,118 @@ namespace CarShowroom.Controllers
             ViewBag.ExpiredWarranties = expiredWarranties;
 
             return View();
+        }
+
+        // ==========================================
+        // 13. XUẤT BÁO CÁO (EXPORT REPORT - CSV/EXCEL)
+        // ==========================================
+        [HttpGet]
+        public async Task<IActionResult> ExportReport(int? year, int? month)
+        {
+            await _context.RefreshExpiredWarrantiesAsync();
+
+            var targetYear = year ?? DateTime.Now.Year;
+            var targetMonth = (month.HasValue && month.Value >= 1 && month.Value <= 12) ? month : null;
+
+            var ownershipsQuery = _context.VehicleOwnerships
+                .Include(vo => vo.Car)
+                .Include(vo => vo.Customer)
+                .Where(vo => vo.PurchaseDate.Year == targetYear);
+
+            if (targetMonth.HasValue)
+            {
+                ownershipsQuery = ownershipsQuery.Where(vo => vo.PurchaseDate.Month == targetMonth.Value);
+            }
+
+            var soldCars = await ownershipsQuery.OrderByDescending(vo => vo.PurchaseDate).ToListAsync();
+            var totalRevenue = soldCars.Sum(vo => vo.PurchasePrice);
+
+            var maintenanceQuery = _context.MaintenanceHistories
+                .Include(h => h.Car)
+                .Include(h => h.Customer)
+                .Where(h => h.MaintenanceDate.Year == targetYear);
+
+            if (targetMonth.HasValue)
+            {
+                maintenanceQuery = maintenanceQuery.Where(h => h.MaintenanceDate.Month == targetMonth.Value);
+            }
+
+            var maintenanceRecords = await maintenanceQuery.OrderByDescending(h => h.MaintenanceDate).ToListAsync();
+            var totalMaintenanceCost = maintenanceRecords.Sum(h => h.Cost ?? 0);
+
+            var activeWarranties = await _context.Warranties.CountAsync(w => w.Status == WarrantyStatus.ConHan);
+            var expiredWarranties = await _context.Warranties.CountAsync(w => w.Status == WarrantyStatus.HetHan);
+
+            var periodText = targetMonth.HasValue
+                ? $"Tháng {targetMonth.Value:D2}/{targetYear}"
+                : $"Năm {targetYear}";
+
+            var sb = new System.Text.StringBuilder();
+
+            // Tiêu đề báo cáo
+            sb.AppendLine("BÁO CÁO TỔNG HỢP HOẠT ĐỘNG KINH DOANH VÀ DỊCH VỤ SHOWROOM");
+            sb.AppendLine($"Kỳ báo cáo:,{EscapeCsv(periodText)}");
+            sb.AppendLine($"Thời gian xuất báo cáo:,{DateTime.Now:dd/MM/yyyy HH:mm:ss}");
+            sb.AppendLine();
+
+            // 1. Chỉ số tổng quan
+            sb.AppendLine("--- TỔNG HỢP CHỈ SỐ KINH DOANH & DỊCH VỤ ---");
+            sb.AppendLine("Chỉ tiêu,Số lượng,Doanh thu / Giá trị,Đơn vị");
+            sb.AppendLine($"Số lượng xe đã bàn giao,{soldCars.Count},{totalRevenue:#,##0},VNĐ");
+            sb.AppendLine($"Số lượt thực hiện bảo dưỡng,{maintenanceRecords.Count},{totalMaintenanceCost:#,##0},VNĐ");
+            sb.AppendLine($"Tổng doanh thu thực tế,-,{(totalRevenue + totalMaintenanceCost):#,##0},VNĐ");
+            sb.AppendLine($"Bảo hành đang có hiệu lực,{activeWarranties},-,Hợp đồng");
+            sb.AppendLine($"Bảo hành đã hết hạn,{expiredWarranties},-,Hợp đồng");
+            sb.AppendLine();
+
+            // 2. Danh sách xe bàn giao
+            sb.AppendLine("--- DANH SÁCH XE ĐÃ BÀN GIAO TRONG KỲ ---");
+            sb.AppendLine("STT,Mã đơn,Ngày bàn giao,Họ tên khách hàng,Số điện thoại,Email,Tên xe,Mã xe,Biển số,Số VIN,Giá bán (VNĐ)");
+            int idxCar = 1;
+            foreach (var vo in soldCars)
+            {
+                sb.AppendLine($"{idxCar++},DH{vo.OrderId:D6},{vo.PurchaseDate:dd/MM/yyyy},{EscapeCsv(vo.Customer?.FullName)},{EscapeCsv(vo.Customer?.PhoneNumber)},{EscapeCsv(vo.Customer?.Email)},{EscapeCsv(vo.Car?.Name)},{EscapeCsv(vo.Car?.CarCode)},{EscapeCsv(vo.LicensePlate ?? "Chưa cấp")},{EscapeCsv(vo.Car?.VIN ?? "---")},{vo.PurchasePrice:#,##0}");
+            }
+            if (!soldCars.Any())
+            {
+                sb.AppendLine(",,,Không có giao dịch bàn giao xe nào trong kỳ báo cáo,,,,,,,");
+            }
+            sb.AppendLine();
+
+            // 3. Danh sách bảo dưỡng
+            sb.AppendLine("--- DANH SÁCH LƯỢT DỊCH VỤ BẢO DƯỠNG TRONG KỲ ---");
+            sb.AppendLine("STT,Ngày bảo dưỡng,Họ tên khách hàng,Số điện thoại,Tên xe,Mã xe,Nội dung bảo dưỡng,Chi phí (VNĐ),Ghi chú");
+            int idxMaint = 1;
+            foreach (var m in maintenanceRecords)
+            {
+                sb.AppendLine($"{idxMaint++},{m.MaintenanceDate:dd/MM/yyyy},{EscapeCsv(m.Customer?.FullName)},{EscapeCsv(m.Customer?.PhoneNumber)},{EscapeCsv(m.Car?.Name)},{EscapeCsv(m.Car?.CarCode)},{EscapeCsv(m.Content)},{(m.Cost ?? 0):#,##0},{EscapeCsv(m.Notes ?? "")}");
+            }
+            if (!maintenanceRecords.Any())
+            {
+                sb.AppendLine(",,,Không có lượt bảo dưỡng nào trong kỳ báo cáo,,,,,,");
+            }
+
+            var fileName = targetMonth.HasValue
+                ? $"BaoCao_Showroom_T{targetMonth.Value:D2}_{targetYear}.csv"
+                : $"BaoCao_Showroom_Nam_{targetYear}.csv";
+
+            var preamble = System.Text.Encoding.UTF8.GetPreamble();
+            var contentBytes = System.Text.Encoding.UTF8.GetBytes(sb.ToString());
+            var fileBytes = new byte[preamble.Length + contentBytes.Length];
+            Buffer.BlockCopy(preamble, 0, fileBytes, 0, preamble.Length);
+            Buffer.BlockCopy(contentBytes, 0, fileBytes, preamble.Length, contentBytes.Length);
+
+            return File(fileBytes, "text/csv; charset=utf-8", fileName);
+        }
+
+        private static string EscapeCsv(string? field)
+        {
+            if (string.IsNullOrEmpty(field)) return "";
+            if (field.Contains(",") || field.Contains("\"") || field.Contains("\n") || field.Contains("\r"))
+            {
+                return $"\"{field.Replace("\"", "\"\"")}\"";
+            }
+            return field;
         }
     }
 }
