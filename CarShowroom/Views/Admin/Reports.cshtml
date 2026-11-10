@@ -17,43 +17,21 @@
         : $"Năm {selectedYear}";
 }
 
-<!-- Print-Only Header (chỉ hiện khi in hoặc xuất PDF) -->
-<div class="print-only mb-4 pb-3 border-bottom">
-    <div class="d-flex justify-content-between align-items-start">
-        <div>
-            <h4 class="fw-bold mb-1 text-uppercase">AutoCare Showroom</h4>
-            <div class="small text-muted">Hệ thống phân phối xe hơi & Trung tâm dịch vụ bảo hành chính hãng</div>
-            <div class="small text-muted">Địa chỉ: 21 Tôn Thất Bật | Hotline: 0348076845 | Email: levantan127@gmail.com</div>
-        </div>
-        <div class="text-end small text-muted">
-            <div>Ngày in: @DateTime.Now.ToString("dd/MM/yyyy HH:mm")</div>
-            <div>Mã báo cáo: BC-@(selectedYear)@(selectedMonth.HasValue ? selectedMonth.Value.ToString("D2") : "ALL")</div>
-        </div>
-    </div>
-    <div class="text-center mt-3">
-        <h4 class="fw-bold text-uppercase mb-1">Báo Cáo Hoạt Động Kinh Doanh & Dịch Vụ</h4>
-        <div class="fw-semibold text-primary">Kỳ báo cáo: @periodText</div>
-    </div>
-</div>
-
-<!-- Header (Screen) -->
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 no-print">
+<!-- Header -->
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
     <div>
         <h4 class="fw-bold text-dark mb-0"><i class="bi bi-graph-up-arrow text-primary me-2"></i>Báo Cáo Thống Kê</h4>
         <small class="text-muted">Tổng hợp kết quả kinh doanh và dịch vụ bảo hành showroom - Kỳ: <strong>@periodText</strong></small>
     </div>
-    <div class="d-flex align-items-center gap-2">
+    <div>
         <a asp-action="ExportReport" asp-route-year="@selectedYear" asp-route-month="@selectedMonth" class="btn btn-success btn-sm fw-semibold shadow-sm px-3">
             <i class="bi bi-file-earmark-excel-fill me-1"></i> Xuất Excel (CSV)
         </a>
-        <button type="button" onclick="window.print()" class="btn btn-outline-dark btn-sm fw-semibold shadow-sm px-3">
-            <i class="bi bi-printer-fill me-1"></i> In báo cáo / PDF
-        </button>
     </div>
 </div>
 
 <!-- Time Filter Card -->
-<div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white no-print">
+<div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white">
     <form method="get" asp-action="Reports">
         <div class="row g-2 align-items-center">
             <div class="col-md-4">
@@ -241,82 +219,3 @@
         </table>
     </div>
 </div>
-
-<!-- Print-Only Signatures (chỉ hiện khi in hoặc xuất PDF) -->
-<div class="print-only mt-5 pt-3">
-    <div class="row text-center">
-        <div class="col-4">
-            <div class="fw-bold">Người Lập Biểu</div>
-            <div class="small text-muted mb-5">(Ký, ghi rõ họ tên)</div>
-            <div class="mt-5 fw-semibold">@User.Identity?.Name</div>
-        </div>
-        <div class="col-4">
-            <div class="fw-bold">Kế Toán Trưởng</div>
-            <div class="small text-muted mb-5">(Ký, ghi rõ họ tên)</div>
-        </div>
-        <div class="col-4">
-            <div class="fw-bold">Giám Đốc Showroom</div>
-            <div class="small text-muted mb-5">(Ký tên & đóng dấu)</div>
-        </div>
-    </div>
-</div>
-
-<style>
-    .print-only {
-        display: none;
-    }
-
-    @@media print {
-        body {
-            background-color: #ffffff !important;
-            color: #000000 !important;
-            font-size: 11pt;
-        }
-
-        .admin-sidebar,
-        .admin-header,
-        .admin-footer,
-        .no-print {
-            display: none !important;
-        }
-
-        .admin-content {
-            margin: 0 !important;
-            padding: 0 !important;
-            width: 100% !important;
-        }
-
-        .admin-wrapper {
-            display: block !important;
-        }
-
-        .print-only {
-            display: block !important;
-        }
-
-        .card {
-            border: 1px solid #ced4da !important;
-            box-shadow: none !important;
-            border-radius: 4px !important;
-            margin-bottom: 20px !important;
-            page-break-inside: avoid;
-        }
-
-        .stat-card {
-            border: 1px solid #ced4da !important;
-            box-shadow: none !important;
-            page-break-inside: avoid;
-        }
-
-        .table th, .table td {
-            border-color: #dee2e6 !important;
-            padding: 6px 8px !important;
-        }
-
-        .badge {
-            border: 1px solid #999 !important;
-            color: #000 !important;
-            background-color: transparent !important;
-        }
-    }
-</style>
