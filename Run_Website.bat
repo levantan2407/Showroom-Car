@@ -1,24 +1,21 @@
 @echo off
-title AutoCare Showroom Web Server
+title AutoCare Showroom Web Server (Hot Reload)
 echo ========================================================
-echo   DANG KHOI CHAY AUTOCARE SHOWROOM WEBSITE...
+echo   DANG KHOI CHAY AUTOCARE SHOWROOM WEBSITE (HOT RELOAD)...
+echo   He thong se TU DONG CAP NHAT khi ban sua code!
 echo ========================================================
 echo.
 
 cd /d "D:\Showroom-car\CarShowroom"
 
-:: Mo trinh duyet sau 2 giay
-start "" cmd /c "timeout /t 2 /nobreak >nul && start http://localhost:5201"
+:: Tat tien trinh cu neu con dang chay ngam de tranh bi khoa file (Locked)
+taskkill /F /IM CarShowroom.exe >nul 2>&1
 
-:: Chay website
-dotnet run --launch-profile http --no-build
+:: Mo trinh duyet sau 3 giay
+start "" cmd /c "timeout /t 3 /nobreak >nul && start http://localhost:5201"
 
-:: Neu --no-build loi (chua build), thu chay build binh thuong
-if %ERRORLEVEL% NEQ 0 (
-    echo.
-    echo Dang bien dich va khoi dong lai...
-    dotnet run --launch-profile http
-)
+:: Chay website voi che do dotnet watch (Hot Reload & Auto-restart)
+dotnet watch run --launch-profile http
 
 pause
 
