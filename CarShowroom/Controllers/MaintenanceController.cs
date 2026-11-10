@@ -70,8 +70,31 @@ namespace CarShowroom.Controllers
 
             if (model.AppointmentDate.Date < DateTime.Today)
             {
-                ModelState.AddModelError("AppointmentDate", "Ngày đặt lịch không hợp lệ.");
-                TempData["ErrorMessage"] = "Ngày đặt lịch không hợp lệ.";
+                ModelState.AddModelError("AppointmentDate", "Ngày hẹn bảo dưỡng không được nằm trong quá khứ.");
+            }
+
+            // Kiểm tra xe đã có lịch hẹn bảo dưỡng trong ngày đã chọn hay chưa
+            var hasSameDayAppointment = await _context.MaintenanceAppointments.AnyAsync(a =>
+                a.CarId == model.CarId &&
+                a.AppointmentDate.Date == model.AppointmentDate.Date &&
+                a.Status != AppointmentStatus.TuChoi &&
+                a.Status != AppointmentStatus.DaHuy);
+
+            if (hasSameDayAppointment)
+            {
+                ModelState.AddModelError("AppointmentDate", "Chiếc xe này đã có lịch hẹn bảo dưỡng vào ngày đã chọn.");
+            }
+
+            // Kiểm tra giới hạn khung giờ (tối đa 3 xe cho mỗi khung giờ trong ngày)
+            var slotCount = await _context.MaintenanceAppointments.CountAsync(a =>
+                a.AppointmentDate.Date == model.AppointmentDate.Date &&
+                a.TimeSlot == model.TimeSlot &&
+                a.Status != AppointmentStatus.TuChoi &&
+                a.Status != AppointmentStatus.DaHuy);
+
+            if (slotCount >= 3)
+            {
+                ModelState.AddModelError("TimeSlot", $"Khung giờ {model.TimeSlot} vào ngày {model.AppointmentDate:dd/MM/yyyy} đã đủ số lượng xe tiếp nhận, vui lòng chọn khung giờ khác.");
             }
 
             if (!ModelState.IsValid)

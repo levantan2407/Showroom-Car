@@ -24,9 +24,7 @@ namespace CarShowroom.Controllers
         [HttpGet]
         public async Task<IActionResult> Check(string? searchTerm)
         {
-            await _context.Warranties
-                .Where(w => w.Status == WarrantyStatus.ConHan && w.EndDate < DateTime.Today)
-                .ExecuteUpdateAsync(s => s.SetProperty(w => w.Status, WarrantyStatus.HetHan));
+            await _context.RefreshExpiredWarrantiesAsync();
 
             var viewModel = new WarrantyCheckViewModel
             {
@@ -55,9 +53,7 @@ namespace CarShowroom.Controllers
         [HttpGet]
         public async Task<IActionResult> MyWarranties()
         {
-            await _context.Warranties
-                .Where(w => w.Status == WarrantyStatus.ConHan && w.EndDate < DateTime.Today)
-                .ExecuteUpdateAsync(s => s.SetProperty(w => w.Status, WarrantyStatus.HetHan));
+            await _context.RefreshExpiredWarrantiesAsync();
 
             var user = await _userManager.GetUserAsync(User);
             var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == user!.Id);

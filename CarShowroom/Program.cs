@@ -48,6 +48,12 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.SlidingExpiration = true;
 });
 
+// Configure SecurityStampValidator interval for immediate lockout enforcement
+builder.Services.Configure<SecurityStampValidatorOptions>(options =>
+{
+    options.ValidationInterval = TimeSpan.FromSeconds(30);
+});
+
 var app = builder.Build();
 
 // Seed database on startup

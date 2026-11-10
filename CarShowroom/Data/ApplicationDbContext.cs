@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using CarShowroom.Models;
+using CarShowroom.Models.Enums;
 
 namespace CarShowroom.Data
 {
@@ -22,6 +23,14 @@ namespace CarShowroom.Data
         public DbSet<WarrantyRequest> WarrantyRequests { get; set; }
         public DbSet<MaintenanceAppointment> MaintenanceAppointments { get; set; }
         public DbSet<MaintenanceHistory> MaintenanceHistories { get; set; }
+
+        public async Task RefreshExpiredWarrantiesAsync()
+        {
+            var today = DateTime.Today;
+            await Warranties
+                .Where(w => w.Status == WarrantyStatus.ConHan && w.EndDate < today)
+                .ExecuteUpdateAsync(s => s.SetProperty(w => w.Status, WarrantyStatus.HetHan));
+        }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

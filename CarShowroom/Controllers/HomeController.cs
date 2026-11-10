@@ -17,6 +17,8 @@ namespace CarShowroom.Controllers
 
         public async Task<IActionResult> Index()
         {
+            await _context.RefreshExpiredWarrantiesAsync();
+
             var featuredCars = await _context.Cars
                 .Include(c => c.Brand)
                 .Include(c => c.Category)

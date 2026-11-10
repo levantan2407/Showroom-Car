@@ -32,9 +32,7 @@ namespace CarShowroom.Controllers
         [HttpGet]
         public async Task<IActionResult> Dashboard()
         {
-            await _context.Warranties
-                .Where(w => w.Status == WarrantyStatus.ConHan && w.EndDate < DateTime.Today)
-                .ExecuteUpdateAsync(s => s.SetProperty(w => w.Status, WarrantyStatus.HetHan));
+            await _context.RefreshExpiredWarrantiesAsync();
 
             var now = DateTime.Now;
 
@@ -350,7 +348,8 @@ namespace CarShowroom.Controllers
                 existingCar.ChassisNumber = model.Car.ChassisNumber;
                 existingCar.EngineNumber = model.Car.EngineNumber;
                 existingCar.Description = model.Car.Description;
-                existingCar.Status = model.Car.Status;
+                var hasOwnership = await _context.VehicleOwnerships.AnyAsync(vo => vo.CarId == id);
+                existingCar.Status = hasOwnership ? CarStatus.DaBan : model.Car.Status;
                 existingCar.UpdatedAt = DateTime.Now;
 
                 await _context.SaveChangesAsync();
@@ -685,7 +684,7 @@ namespace CarShowroom.Controllers
 
             if (order.Status != OrderStatus.DangHoanTat)
             {
-                TempData["ErrorMessage"] = "Chỉ có thể bàn giao xe khi đơn hàng ở trạng thái 'Đang làm thủ tục'.";
+                TempData["ErrorMessage"] = "Chỉ có thể bàn giao xe khi đơn hàng ở trạng thái 'Đang hoàn tất thủ tục'.";
                 return RedirectToAction(nameof(OrderDetails), new { id });
             }
 
@@ -777,6 +776,23 @@ namespace CarShowroom.Controllers
                 };
                 _context.Warranties.Add(warranty);
                 await _context.SaveChangesAsync();
+
+                // 5. Tự động hủy các đơn đặt mua khác của cùng chiếc xe này
+                var otherPendingOrders = await _context.Orders
+                    .Where(o => o.CarId == car.Id && o.Id != order.Id && o.Status != OrderStatus.DaHoanThanh && o.Status != OrderStatus.DaHuy)
+                    .ToListAsync();
+
+                foreach (var otherOrder in otherPendingOrders)
+                {
+                    otherOrder.Status = OrderStatus.DaHuy;
+                    otherOrder.CancelReason = "Xe đã được bán cho khách hàng khác.";
+                    otherOrder.IsCancelRequested = false;
+                    otherOrder.UpdatedAt = DateTime.Now;
+                }
+                if (otherPendingOrders.Any())
+                {
+                    await _context.SaveChangesAsync();
+                }
 
                 // Commit Transaction
                 await transaction.CommitAsync();
@@ -934,15 +950,11 @@ namespace CarShowroom.Controllers
             return View(soldCars);
         }
 
-        // ==========================================
-        // 7. QUẢN LÝ BẢO HÀNH (WARRANTIES)
-        // ==========================================
+        // GET: /Admin/Warranties
         [HttpGet]
         public async Task<IActionResult> Warranties(string? searchTerm, WarrantyStatus? status, int page = 1)
         {
-            await _context.Warranties
-                .Where(w => w.Status == WarrantyStatus.ConHan && w.EndDate < DateTime.Today)
-                .ExecuteUpdateAsync(s => s.SetProperty(w => w.Status, WarrantyStatus.HetHan));
+            await _context.RefreshExpiredWarrantiesAsync();
 
             var query = _context.Warranties
                 .Include(w => w.Car)
@@ -1019,7 +1031,7 @@ namespace CarShowroom.Controllers
             {
                 warranty.Conditions = conditions;
             }
-            warranty.Status = WarrantyStatus.ConHan;
+            warranty.Status = warranty.EndDate >= DateTime.Today ? WarrantyStatus.ConHan : WarrantyStatus.HetHan;
             warranty.UpdatedAt = DateTime.Now;
 
             await _context.SaveChangesAsync();
@@ -1089,6 +1101,32 @@ namespace CarShowroom.Controllers
             {
                 TempData["ErrorMessage"] = "Không thể thay đổi trạng thái khi yêu cầu bảo hành đã Hoàn thành hoặc đã bị Từ chối.";
                 return RedirectToAction(nameof(WarrantyRequestDetails), new { id });
+            }
+
+            if (status != request.Status)
+            {
+                bool isValidTransition = false;
+                switch (request.Status)
+                {
+                    case WarrantyRequestStatus.ChoTiepNhan:
+                        isValidTransition = (status == WarrantyRequestStatus.DaTiepNhan || status == WarrantyRequestStatus.TuChoi);
+                        break;
+                    case WarrantyRequestStatus.DaTiepNhan:
+                        isValidTransition = (status == WarrantyRequestStatus.DangXuLy || status == WarrantyRequestStatus.TuChoi);
+                        break;
+                    case WarrantyRequestStatus.DangXuLy:
+                        isValidTransition = (status == WarrantyRequestStatus.HoanThanh || status == WarrantyRequestStatus.TuChoi);
+                        break;
+                    default:
+                        isValidTransition = false;
+                        break;
+                }
+
+                if (!isValidTransition)
+                {
+                    TempData["ErrorMessage"] = "Quy trình xử lý không hợp lệ: Không thể nhảy cóc hoặc đảo ngược trạng thái yêu cầu bảo hành.";
+                    return RedirectToAction(nameof(WarrantyRequestDetails), new { id });
+                }
             }
 
             if (status == WarrantyRequestStatus.TuChoi && string.IsNullOrWhiteSpace(rejectReason))
@@ -1331,6 +1369,13 @@ namespace CarShowroom.Controllers
                 return RedirectToAction(nameof(MaintenanceHistories));
             }
 
+            var isOwner = await _context.VehicleOwnerships.AnyAsync(vo => vo.CarId == carId && vo.CustomerId == customerId);
+            if (!isOwner)
+            {
+                TempData["ErrorMessage"] = "Khách hàng được chọn không phải là chủ sở hữu của chiếc xe này.";
+                return RedirectToAction(nameof(MaintenanceHistories));
+            }
+
             var history = new MaintenanceHistory
             {
                 CarId = carId,
@@ -1400,6 +1445,12 @@ namespace CarShowroom.Controllers
             user.IsActive = !user.IsActive;
             await _userManager.UpdateAsync(user);
 
+            // Thu hồi phiên đăng nhập ngay lập tức khi khóa tài khoản
+            if (!user.IsActive)
+            {
+                await _userManager.UpdateSecurityStampAsync(user);
+            }
+
             TempData["SuccessMessage"] = $"Đã {(user.IsActive ? "mở khóa" : "khóa")} tài khoản '{user.Email}' thành công!";
             return RedirectToAction(nameof(Users));
         }
@@ -1410,9 +1461,7 @@ namespace CarShowroom.Controllers
         [HttpGet]
         public async Task<IActionResult> Reports(int? year, int? month)
         {
-            await _context.Warranties
-                .Where(w => w.Status == WarrantyStatus.ConHan && w.EndDate < DateTime.Today)
-                .ExecuteUpdateAsync(s => s.SetProperty(w => w.Status, WarrantyStatus.HetHan));
+            await _context.RefreshExpiredWarrantiesAsync();
 
             var targetYear = year ?? DateTime.Now.Year;
             var targetMonth = month;
