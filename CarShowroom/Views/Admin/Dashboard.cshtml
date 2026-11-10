@@ -313,11 +313,13 @@
                 datasets: [{
                     label: 'Doanh thu (VNĐ)',
                     data: revenueData,
-                    borderColor: '#0077b6',
-                    backgroundColor: 'rgba(0, 119, 182, 0.1)',
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37, 99, 235, 0.08)',
                     fill: true,
-                    tension: 0.3,
-                    pointBackgroundColor: '#0077b6',
+                    tension: 0.35,
+                    pointBackgroundColor: '#6366f1',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
                     pointRadius: 5
                 }]
             },
@@ -344,7 +346,7 @@
                 labels: ['Đang kinh doanh', 'Đã bán', 'Đã đặt cọc', 'Ngừng kinh doanh'],
                 datasets: [{
                     data: [@Model.StatusDangKinhDoanh, @Model.StatusDaBan, @Model.StatusDaDatCoc, @Model.StatusNgungKinhDoanh],
-                    backgroundColor: ['#2ec4b6', '#e63946', '#ff9f1c', '#6c757d']
+                    backgroundColor: ['#2563eb', '#6366f1', '#93c5fd', '#cbd5e1']
                 }]
             },
             options: {
@@ -364,8 +366,8 @@
                 datasets: [{
                     label: 'Số xe bàn giao',
                     data: salesData,
-                    backgroundColor: '#198754',
-                    borderRadius: 6
+                    backgroundColor: '#3b82f6',
+                    borderRadius: 8
                 }]
             },
             options: {
@@ -385,8 +387,8 @@
                 datasets: [{
                     label: 'Yêu cầu bảo hành',
                     data: warrantyData,
-                    backgroundColor: '#dc3545',
-                    borderRadius: 6
+                    backgroundColor: '#818cf8',
+                    borderRadius: 8
                 }]
             },
             options: {

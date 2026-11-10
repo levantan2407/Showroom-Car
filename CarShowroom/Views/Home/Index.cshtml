@@ -8,12 +8,12 @@
     <div class="container">
         <div class="row align-items-center">
             <div class="col-lg-7">
-                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold mb-3">
-                    <i class="bi bi-patch-check-fill me-1"></i> AutoCare Showroom Chính Hãng
+                <span class="badge bg-white text-primary px-3 py-2 rounded-pill fw-bold mb-3 shadow-sm">
+                    <i class="bi bi-patch-check-fill me-1 text-primary"></i> AutoCare Showroom Chính Hãng
                 </span>
                 <h1 class="hero-title text-white">
                     Trải Nghiệm Đẳng Cấp <br />
-                    <span style="color: var(--accent-gold);">Xe Mới & Dịch Vụ Bảo Hành</span> Tiêu Chuẩn
+                    <span style="color: #c7d2fe;">Xe Mới & Dịch Vụ Bảo Hành</span> Tiêu Chuẩn
                 </h1>
                 <p class="hero-subtitle">
                     Hơn 500 mẫu xe đa dạng từ các thương hiệu hàng đầu thế giới. Cam kết xe chất lượng kiểm định 160 điểm, bảo hành chính hãng đến 3 năm và hỗ trợ thủ tục mua xe nhanh chóng.
@@ -30,15 +30,15 @@
                 <!-- Quick Stats Ribbon -->
                 <div class="row g-3 pt-3 border-top border-white-50 text-white">
                     <div class="col-4">
-                        <h3 class="fw-bold mb-0 text-warning">@Model.TotalCarsCount+</h3>
+                        <h3 class="fw-bold mb-0 text-white">@Model.TotalCarsCount+</h3>
                         <small class="text-white-50">Xe tại Showroom</small>
                     </div>
                     <div class="col-4">
-                        <h3 class="fw-bold mb-0 text-warning">@Model.TotalCustomersCount+</h3>
+                        <h3 class="fw-bold mb-0 text-white">@Model.TotalCustomersCount+</h3>
                         <small class="text-white-50">Khách hàng tin tưởng</small>
                     </div>
                     <div class="col-4">
-                        <h3 class="fw-bold mb-0 text-warning">3 Năm</h3>
+                        <h3 class="fw-bold mb-0 text-white">3 Năm</h3>
                         <small class="text-white-50">Bảo hành chính hãng</small>
                     </div>
                 </div>
@@ -170,14 +170,14 @@
                 <div class="position-relative">
                     <img src="https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&w=800&q=80" 
                          alt="AutoCare Showroom" class="img-fluid rounded-4 shadow-lg w-100" />
-                    <div class="position-absolute bottom-0 start-0 bg-dark text-white p-4 rounded-3 m-3 d-none d-sm-block shadow" style="max-width: 280px; background-color: var(--primary-navy) !important;">
-                        <h4 class="fw-bold text-warning mb-1">10+ Năm</h4>
+                    <div class="position-absolute bottom-0 start-0 text-white p-4 rounded-4 m-3 d-none d-sm-block shadow-lg" style="max-width: 280px; background: linear-gradient(135deg, #1e3a8a, #4f46e5);">
+                        <h4 class="fw-bold text-white mb-1">10+ Năm</h4>
                         <p class="mb-0 small text-white-50">Kinh nghiệm phân phối & chăm sóc xe hơi cao cấp</p>
                     </div>
                 </div>
             </div>
             <div class="col-lg-6">
-                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold mb-2">Về chúng tôi</span>
+                <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fw-bold mb-2">Về chúng tôi</span>
                 <h2 class="fw-bold text-dark mb-3">AutoCare Showroom - Điểm Đến Đáng Tin Cậy Của Mọi Khách Hàng</h2>
                 <p class="text-muted leading-relaxed mb-4">
                     Với diện tích trưng bày hơn 3.000m² cùng xưởng dịch vụ kỹ thuật tiêu chuẩn quốc tế, AutoCare Showroom tự hào là đại lý ủy quyền hàng đầu cung cấp các dòng xe Sedan, SUV, Crossover chính hãng từ Toyota, Honda, Mazda, Hyundai, Kia, Mercedes-Benz và BMW.
@@ -206,7 +206,7 @@
                         </div>
                     </div>
                 </div>
-                <a asp-controller="Home" asp-action="About" class="btn btn-outline-dark px-4 fw-semibold">
+                <a asp-controller="Home" asp-action="About" class="btn btn-outline-primary px-4 fw-semibold">
                     Xem chi tiết giới thiệu <i class="bi bi-arrow-right ms-1"></i>
                 </a>
             </div>
@@ -215,26 +215,26 @@
 </section>
 
 <!-- Warranty Policy Section -->
-<section class="py-5" style="background-color: var(--primary-navy); color: #fff;">
+<section class="py-5" style="background: linear-gradient(135deg, #1e3a8a 0%, #312e81 100%); color: #fff;">
     <div class="container">
         <div class="row align-items-center g-5">
             <div class="col-lg-6">
-                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold mb-3">Chính sách hậu mãi</span>
+                <span class="badge bg-white text-primary px-3 py-2 rounded-pill fw-bold mb-3 shadow-sm">Chính sách hậu mãi</span>
                 <h2 class="fw-bold text-white mb-3">Bảo Hành Chính Hãng Lên Đến 3 Năm Hoặc 100.000 KM</h2>
                 <p class="text-white-50 leading-relaxed mb-4">
                     Tại AutoCare Showroom, chiếc xe của bạn luôn được bảo vệ bởi chương trình bảo hành toàn diện và hệ thống quản lý bảo dưỡng số hóa trực tuyến.
                 </p>
                 <ul class="list-unstyled d-flex flex-column gap-3 mb-4">
                     <li class="d-flex align-items-center gap-3">
-                        <i class="bi bi-check-circle-fill text-warning fs-5"></i>
+                        <i class="bi bi-check-circle-fill text-info fs-5"></i>
                         <span>Bảo hành động cơ, hộp số và toàn bộ hệ thống truyền lực 36 tháng.</span>
                     </li>
                     <li class="d-flex align-items-center gap-3">
-                        <i class="bi bi-check-circle-fill text-warning fs-5"></i>
+                        <i class="bi bi-check-circle-fill text-info fs-5"></i>
                         <span>Tra cứu thông tin bảo hành trực tuyến bằng Số VIN hoặc Mã bảo hành bất cứ lúc nào.</span>
                     </li>
                     <li class="d-flex align-items-center gap-3">
-                        <i class="bi bi-check-circle-fill text-warning fs-5"></i>
+                        <i class="bi bi-check-circle-fill text-info fs-5"></i>
                         <span>Gửi yêu cầu bảo dưỡng, bảo hành online ngay trên website và theo dõi tiến độ xử lý.</span>
                     </li>
                     <li class="d-flex align-items-center gap-3">
