@@ -88,5 +88,36 @@ namespace CarShowroom.ViewModels
         [Compare("NewPassword", ErrorMessage = "Mật khẩu xác nhận không khớp")]
         public string ConfirmPassword { get; set; } = string.Empty;
     }
+
+    public class ForgotPasswordViewModel
+    {
+        [Required(ErrorMessage = "Vui lòng nhập Email của bạn")]
+        [EmailAddress(ErrorMessage = "Email không đúng định dạng")]
+        [Display(Name = "Email tài khoản")]
+        public string Email { get; set; } = string.Empty;
+    }
+
+    public class ResetPasswordViewModel
+    {
+        [Required(ErrorMessage = "Vui lòng nhập Email")]
+        [EmailAddress(ErrorMessage = "Email không hợp lệ")]
+        [Display(Name = "Email tài khoản")]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Mã xác thực không hợp lệ")]
+        public string Token { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Vui lòng nhập mật khẩu mới")]
+        [StringLength(100, MinimumLength = 6, ErrorMessage = "Mật khẩu mới phải từ 6 ký tự")]
+        [DataType(DataType.Password)]
+        [Display(Name = "Mật khẩu mới")]
+        public string NewPassword { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Vui lòng xác nhận mật khẩu mới")]
+        [DataType(DataType.Password)]
+        [Display(Name = "Xác nhận mật khẩu mới")]
+        [Compare("NewPassword", ErrorMessage = "Mật khẩu xác nhận không khớp")]
+        public string ConfirmPassword { get; set; } = string.Empty;
+    }
 }
 

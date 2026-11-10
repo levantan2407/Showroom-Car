@@ -266,6 +266,140 @@ namespace CarShowroom.Controllers
         {
             return View();
         }
+
+        // ==========================================
+        // QUÊN MẬT KHẨU & ĐẶT LẠI MẬT KHẨU
+        // ==========================================
+
+        // GET: /Account/ForgotPassword
+        [HttpGet]
+        public IActionResult ForgotPassword()
+        {
+            if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                return RedirectToAction("Index", "Home");
+            }
+            return View(new ForgotPasswordViewModel());
+        }
+
+        // POST: /Account/ForgotPassword
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                ModelState.AddModelError(string.Empty, "Không tìm thấy tài khoản nào với địa chỉ Email này.");
+                return View(model);
+            }
+
+            if (!user.IsActive)
+            {
+                ModelState.AddModelError(string.Empty, "Tài khoản của bạn hiện đang bị khóa. Vui lòng liên hệ ban quản trị.");
+                return View(model);
+            }
+
+            // Tạo Token đặt lại mật khẩu an toàn qua ASP.NET Core Identity
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var resetLink = Url.Action("ResetPassword", "Account", new { email = user.Email, token = token }, Request.Scheme);
+
+            ViewBag.ResetLink = resetLink;
+            ViewBag.UserEmail = user.Email;
+            ViewBag.FullName = user.FullName;
+
+            return View("ForgotPasswordConfirmation");
+        }
+
+        // GET: /Account/ResetPassword
+        [HttpGet]
+        public async Task<IActionResult> ResetPassword(string? email, string? token)
+        {
+            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(token))
+            {
+                TempData["ErrorMessage"] = "Liên kết khôi phục mật khẩu không hợp lệ.";
+                return RedirectToAction(nameof(ForgotPassword));
+            }
+
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                TempData["ErrorMessage"] = "Không tìm thấy thông tin tài khoản yêu cầu khôi phục.";
+                return RedirectToAction(nameof(ForgotPassword));
+            }
+
+            var model = new ResetPasswordViewModel
+            {
+                Email = email,
+                Token = token
+            };
+
+            return View(model);
+        }
+
+        // POST: /Account/ResetPassword
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                ModelState.AddModelError(string.Empty, "Không tìm thấy thông tin tài khoản.");
+                return View(model);
+            }
+
+            var result = await _userManager.ResetPasswordAsync(user, model.Token, model.NewPassword);
+            if (result.Succeeded)
+            {
+                // Cập nhật SecurityStamp để hủy các phiên đăng nhập cũ
+                await _userManager.UpdateSecurityStampAsync(user);
+
+                // Mở khóa nếu tài khoản đang bị khóa do nhập sai mật khẩu nhiều lần
+                if (await _userManager.IsLockedOutAsync(user))
+                {
+                    await _userManager.SetLockoutEndDateAsync(user, null);
+                }
+
+                TempData["SuccessMessage"] = "Đặt lại mật khẩu thành công! Bạn có thể đăng nhập ngay bằng mật khẩu mới.";
+                return RedirectToAction(nameof(Login));
+            }
+
+            foreach (var error in result.Errors)
+            {
+                var desc = error.Description;
+                if (error.Code == "InvalidToken")
+                {
+                    desc = "Mã xác thực (Token) đã hết hạn hoặc không hợp lệ. Vui lòng gửi lại yêu cầu quên mật khẩu.";
+                }
+                else if (error.Code == "PasswordTooShort")
+                {
+                    desc = "Mật khẩu phải có độ dài tối thiểu từ 6 ký tự.";
+                }
+                else if (error.Code == "PasswordRequiresDigit")
+                {
+                    desc = "Mật khẩu phải chứa ít nhất một chữ số (0-9).";
+                }
+                else if (error.Code == "PasswordRequiresLower")
+                {
+                    desc = "Mật khẩu phải chứa ít nhất một chữ cái thường.";
+                }
+
+                ModelState.AddModelError(string.Empty, desc);
+            }
+
+            return View(model);
+        }
     }
 }
 
