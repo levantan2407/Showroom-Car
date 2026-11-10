@@ -68,6 +68,12 @@ namespace CarShowroom.Controllers
                 ModelState.AddModelError(string.Empty, "Xe được chọn không thuộc hồ sơ sở hữu của bạn.");
             }
 
+            if (model.AppointmentDate.Date < DateTime.Today)
+            {
+                ModelState.AddModelError("AppointmentDate", "Ngày đặt lịch không hợp lệ.");
+                TempData["ErrorMessage"] = "Ngày đặt lịch không hợp lệ.";
+            }
+
             if (!ModelState.IsValid)
             {
                 model.MyCars = await _context.VehicleOwnerships

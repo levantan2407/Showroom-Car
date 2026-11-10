@@ -24,6 +24,10 @@ namespace CarShowroom.Controllers
         [HttpGet]
         public async Task<IActionResult> Check(string? searchTerm)
         {
+            await _context.Warranties
+                .Where(w => w.Status == WarrantyStatus.ConHan && w.EndDate < DateTime.Today)
+                .ExecuteUpdateAsync(s => s.SetProperty(w => w.Status, WarrantyStatus.HetHan));
+
             var viewModel = new WarrantyCheckViewModel
             {
                 SearchTerm = searchTerm ?? string.Empty
@@ -51,6 +55,10 @@ namespace CarShowroom.Controllers
         [HttpGet]
         public async Task<IActionResult> MyWarranties()
         {
+            await _context.Warranties
+                .Where(w => w.Status == WarrantyStatus.ConHan && w.EndDate < DateTime.Today)
+                .ExecuteUpdateAsync(s => s.SetProperty(w => w.Status, WarrantyStatus.HetHan));
+
             var user = await _userManager.GetUserAsync(User);
             var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == user!.Id);
             if (customer == null) return View(new List<Warranty>());
@@ -95,9 +103,10 @@ namespace CarShowroom.Controllers
             var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == user!.Id);
             if (customer == null) return RedirectToAction("MyWarranties");
 
+            var today = DateTime.Today;
             var myWarranties = await _context.Warranties
                 .Include(w => w.Car)
-                .Where(w => w.CustomerId == customer.Id && w.Status == WarrantyStatus.ConHan)
+                .Where(w => w.CustomerId == customer.Id && w.Status == WarrantyStatus.ConHan && w.EndDate >= today)
                 .ToListAsync();
 
             if (!myWarranties.Any())
@@ -126,6 +135,7 @@ namespace CarShowroom.Controllers
             var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == user!.Id);
             if (customer == null) return RedirectToAction("MyWarranties");
 
+            var today = DateTime.Today;
             var warranty = await _context.Warranties
                 .Include(w => w.Car)
                 .FirstOrDefaultAsync(w => w.Id == model.WarrantyId && w.CustomerId == customer.Id);
@@ -134,12 +144,21 @@ namespace CarShowroom.Controllers
             {
                 ModelState.AddModelError(string.Empty, "Hồ sơ bảo hành không hợp lệ hoặc không thuộc quyền sở hữu của bạn.");
             }
+            else if (warranty.Status != WarrantyStatus.ConHan || warranty.EndDate < today)
+            {
+                ModelState.AddModelError(string.Empty, "Xe đã hết hạn bảo hành, vui lòng đặt lịch bảo dưỡng có phí.");
+            }
+
+            if (model.PreferredDate.HasValue && model.PreferredDate.Value.Date < today)
+            {
+                ModelState.AddModelError("PreferredDate", "Ngày mong muốn tiếp nhận không được nằm trong quá khứ.");
+            }
 
             if (!ModelState.IsValid)
             {
                 model.AvailableWarranties = await _context.Warranties
                     .Include(w => w.Car)
-                    .Where(w => w.CustomerId == customer.Id && w.Status == WarrantyStatus.ConHan)
+                    .Where(w => w.CustomerId == customer.Id && w.Status == WarrantyStatus.ConHan && w.EndDate >= today)
                     .ToListAsync();
                 return View(model);
             }

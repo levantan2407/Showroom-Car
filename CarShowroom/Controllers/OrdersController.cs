@@ -103,6 +103,18 @@ namespace CarShowroom.Controllers
                 await _context.SaveChangesAsync();
             }
 
+            var hasPendingOrder = await _context.Orders.AnyAsync(o =>
+                o.CustomerId == customer.Id &&
+                o.CarId == car.Id &&
+                o.Status != OrderStatus.DaHoanThanh &&
+                o.Status != OrderStatus.DaHuy);
+
+            if (hasPendingOrder)
+            {
+                TempData["ErrorMessage"] = "Bạn đã có yêu cầu đang chờ xử lý cho mẫu xe này.";
+                return RedirectToAction("Details", "Cars", new { id = model.CarId });
+            }
+
             // Generate Unique Order Code: ORD-yyyyMMdd-XXX
             var todayStr = DateTime.Now.ToString("yyyyMMdd");
             var countToday = await _context.Orders.CountAsync(o => o.OrderCode.StartsWith($"ORD-{todayStr}"));
@@ -211,12 +223,10 @@ namespace CarShowroom.Controllers
             order.IsCancelRequested = true;
             order.CancelRequestReason = cancelRequestReason.Trim();
             order.CancelRequestedAt = DateTime.Now;
-            // Đơn hàng vẫn giữ ở trạng thái Chờ xác nhận
-            order.Status = OrderStatus.ChoXacNhan;
             order.UpdatedAt = DateTime.Now;
 
             await _context.SaveChangesAsync();
-            TempData["SuccessMessage"] = "Yêu cầu hủy đơn hàng đã được gửi thành công với lý do của bạn. Đơn hàng vẫn ở trạng thái 'Chờ xác nhận' cho đến khi Admin phê duyệt.";
+            TempData["SuccessMessage"] = "Yêu cầu hủy đơn hàng đã được gửi đến Admin. Vui lòng đợi Showroom xét duyệt.";
             return RedirectToAction(nameof(Details), new { id });
         }
     }

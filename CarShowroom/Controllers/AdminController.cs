@@ -200,6 +200,20 @@ namespace CarShowroom.Controllers
                 }
             }
 
+            if (model.ImageFile != null && model.ImageFile.Length > 0)
+            {
+                var ext = Path.GetExtension(model.ImageFile.FileName).ToLowerInvariant();
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+                if (!allowedExtensions.Contains(ext))
+                {
+                    ModelState.AddModelError("ImageFile", "Ảnh tải lên chỉ chấp nhận định dạng .jpg, .jpeg, .png, .webp.");
+                }
+                if (model.ImageFile.Length > 5 * 1024 * 1024)
+                {
+                    ModelState.AddModelError("ImageFile", "Dung lượng ảnh tối đa không được vượt quá 5MB.");
+                }
+            }
+
             if (ModelState.IsValid)
             {
                 // Handle file upload if any
@@ -259,6 +273,28 @@ namespace CarShowroom.Controllers
             if (await _context.Cars.AnyAsync(c => c.CarCode == model.Car.CarCode && c.Id != id))
             {
                 ModelState.AddModelError("Car.CarCode", "Mã xe này đã trùng với một xe khác.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(model.Car.VIN))
+            {
+                if (await _context.Cars.AnyAsync(c => c.VIN == model.Car.VIN && c.Id != id))
+                {
+                    ModelState.AddModelError("Car.VIN", "Số VIN này đã tồn tại ở một xe khác.");
+                }
+            }
+
+            if (model.ImageFile != null && model.ImageFile.Length > 0)
+            {
+                var ext = Path.GetExtension(model.ImageFile.FileName).ToLowerInvariant();
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+                if (!allowedExtensions.Contains(ext))
+                {
+                    ModelState.AddModelError("ImageFile", "Ảnh tải lên chỉ chấp nhận định dạng .jpg, .jpeg, .png, .webp.");
+                }
+                if (model.ImageFile.Length > 5 * 1024 * 1024)
+                {
+                    ModelState.AddModelError("ImageFile", "Dung lượng ảnh tối đa không được vượt quá 5MB.");
+                }
             }
 
             if (ModelState.IsValid)
@@ -570,9 +606,15 @@ namespace CarShowroom.Controllers
             var order = await _context.Orders.FindAsync(id);
             if (order == null) return NotFound();
 
-            if (order.Status == OrderStatus.DaHoanThanh)
+            if (order.Status == OrderStatus.DaHoanThanh || order.Status == OrderStatus.DaHuy)
             {
-                TempData["ErrorMessage"] = "Đơn hàng này đã hoàn thành toàn bộ thủ tục giao dịch, không thể chuyển đổi trạng thái thủ công.";
+                TempData["ErrorMessage"] = "Không thể cập nhật trạng thái cho đơn hàng đã hoàn thành hoặc đã bị hủy.";
+                return RedirectToAction(nameof(OrderDetails), new { id });
+            }
+
+            if (status != OrderStatus.DaLienHe && status != OrderStatus.DaXacNhan && status != OrderStatus.DangHoanTat)
+            {
+                TempData["ErrorMessage"] = "Trạng thái cập nhật không hợp lệ. Chỉ chấp nhận Đã liên hệ, Đã xác nhận hoặc Đang hoàn tất thủ tục.";
                 return RedirectToAction(nameof(OrderDetails), new { id });
             }
 
@@ -596,14 +638,32 @@ namespace CarShowroom.Controllers
 
             if (order == null) return NotFound();
 
-            if (order.Status == OrderStatus.DaHoanThanh)
+            if (order.Status != OrderStatus.DangHoanTat)
             {
-                TempData["ErrorMessage"] = "Đơn hàng này đã được xác nhận hoàn tất trước đó.";
+                TempData["ErrorMessage"] = "Chỉ có thể bàn giao xe khi đơn hàng ở trạng thái 'Đang làm thủ tục'.";
                 return RedirectToAction(nameof(OrderDetails), new { id });
             }
 
             var car = order.Car;
             if (car == null) return NotFound();
+
+            if (car.Status == CarStatus.DaBan || await _context.VehicleOwnerships.AnyAsync(vo => vo.CarId == car.Id))
+            {
+                TempData["ErrorMessage"] = "Xe này đã được bán hoặc đã có hồ sơ sở hữu trong hệ thống.";
+                return RedirectToAction(nameof(OrderDetails), new { id });
+            }
+
+            if (string.IsNullOrWhiteSpace(licensePlate))
+            {
+                TempData["ErrorMessage"] = "Biển số xe bàn giao không được để trống.";
+                return RedirectToAction(nameof(OrderDetails), new { id });
+            }
+
+            if (warrantyMonths < 1 || warrantyMonths > 120)
+            {
+                TempData["ErrorMessage"] = "Thời hạn bảo hành phải từ 1 đến 120 tháng.";
+                return RedirectToAction(nameof(OrderDetails), new { id });
+            }
 
             // Transaction Start
             using var transaction = await _context.Database.BeginTransactionAsync();
@@ -618,55 +678,51 @@ namespace CarShowroom.Controllers
                 car.Status = CarStatus.DaBan;
                 car.UpdatedAt = DateTime.Now;
 
-                // 3. Tạo hồ sơ sở hữu xe cho khách hàng (kiểm tra không trùng lặp)
-                var existingOwnership = await _context.VehicleOwnerships.FirstOrDefaultAsync(vo => vo.CarId == car.Id);
-                if (existingOwnership == null)
+                // 3. Luôn tạo mới hồ sơ sở hữu xe cho khách hàng
+                var price = purchasePrice ?? car.Price;
+                var ownership = new VehicleOwnership
                 {
-                    var price = purchasePrice ?? car.Price;
-                    var ownership = new VehicleOwnership
-                    {
-                        CustomerId = order.CustomerId,
-                        CarId = car.Id,
-                        OrderId = order.Id,
-                        LicensePlate = licensePlate,
-                        PurchaseDate = DateTime.Now,
-                        DeliveryDate = DateTime.Now,
-                        PurchasePrice = price,
-                        CreatedAt = DateTime.Now
-                    };
-                    _context.VehicleOwnerships.Add(ownership);
-                    await _context.SaveChangesAsync();
+                    CustomerId = order.CustomerId,
+                    CarId = car.Id,
+                    OrderId = order.Id,
+                    LicensePlate = licensePlate.Trim(),
+                    PurchaseDate = DateTime.Now,
+                    DeliveryDate = DateTime.Now,
+                    PurchasePrice = price,
+                    CreatedAt = DateTime.Now
+                };
+                _context.VehicleOwnerships.Add(ownership);
+                await _context.SaveChangesAsync();
 
-                    // 4. Tạo hồ sơ bảo hành cho xe (kiểm tra không trùng lặp)
-                    var countWrt = await _context.Warranties.CountAsync();
-                    var warrantyCode = $"WRT-{DateTime.Now.Year}-{(countWrt + 1):D3}";
+                // 4. Luôn tạo mới hồ sơ bảo hành cho xe
+                var countWrt = await _context.Warranties.CountAsync();
+                var warrantyCode = $"WRT-{DateTime.Now.Year}-{(countWrt + 1):D3}";
 
-                    var warranty = new Warranty
-                    {
-                        WarrantyCode = warrantyCode,
-                        VehicleOwnershipId = ownership.Id,
-                        CustomerId = order.CustomerId,
-                        CarId = car.Id,
-                        StartDate = DateTime.Now,
-                        EndDate = DateTime.Now.AddMonths(warrantyMonths),
-                        WarrantyPeriodMonths = warrantyMonths,
-                        Conditions = "Bảo hành chính hãng toàn diện cho động cơ, hộp số và hệ thống truyền động trong thời hạn 36 tháng hoặc 100.000 km. Miễn phí công kiểm tra định kỳ.",
-                        Status = WarrantyStatus.ConHan,
-                        CreatedAt = DateTime.Now
-                    };
-                    _context.Warranties.Add(warranty);
-                    await _context.SaveChangesAsync();
-                }
+                var warranty = new Warranty
+                {
+                    WarrantyCode = warrantyCode,
+                    VehicleOwnershipId = ownership.Id,
+                    CustomerId = order.CustomerId,
+                    CarId = car.Id,
+                    StartDate = DateTime.Now,
+                    EndDate = DateTime.Now.AddMonths(warrantyMonths),
+                    WarrantyPeriodMonths = warrantyMonths,
+                    Conditions = "Bảo hành chính hãng toàn diện cho động cơ, hộp số và hệ thống truyền động trong thời hạn bảo hành hoặc 100.000 km. Miễn phí công kiểm tra định kỳ.",
+                    Status = WarrantyStatus.ConHan,
+                    CreatedAt = DateTime.Now
+                };
+                _context.Warranties.Add(warranty);
+                await _context.SaveChangesAsync();
 
                 // Commit Transaction
                 await transaction.CommitAsync();
 
                 TempData["SuccessMessage"] = $"Xác nhận hoàn tất giao dịch thành công! Xe đã chuyển sang trạng thái 'Đã bán', tạo hồ sơ sở hữu và kích hoạt bảo hành.";
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 await transaction.RollbackAsync();
-                TempData["ErrorMessage"] = $"Lỗi khi hoàn tất giao dịch: {ex.Message}";
+                TempData["ErrorMessage"] = "Giao dịch thất bại, vui lòng thử lại.";
             }
 
             return RedirectToAction(nameof(OrderDetails), new { id });
@@ -678,6 +734,12 @@ namespace CarShowroom.Controllers
         {
             var order = await _context.Orders.Include(o => o.Car).FirstOrDefaultAsync(o => o.Id == id);
             if (order == null) return NotFound();
+
+            if (order.Status == OrderStatus.DaHoanThanh || order.Status == OrderStatus.DaHuy)
+            {
+                TempData["ErrorMessage"] = "Không thể hủy đơn hàng đã hoàn thành hoặc đã bị hủy trước đó.";
+                return RedirectToAction(nameof(OrderDetails), new { id });
+            }
 
             order.Status = OrderStatus.DaHuy;
             order.CancelReason = cancelReason;
@@ -796,6 +858,10 @@ namespace CarShowroom.Controllers
         [HttpGet]
         public async Task<IActionResult> Warranties(string? searchTerm, WarrantyStatus? status, int page = 1)
         {
+            await _context.Warranties
+                .Where(w => w.Status == WarrantyStatus.ConHan && w.EndDate < DateTime.Today)
+                .ExecuteUpdateAsync(s => s.SetProperty(w => w.Status, WarrantyStatus.HetHan));
+
             var query = _context.Warranties
                 .Include(w => w.Car)
                     .ThenInclude(c => c!.Brand)
@@ -858,6 +924,12 @@ namespace CarShowroom.Controllers
         {
             var warranty = await _context.Warranties.FindAsync(id);
             if (warranty == null) return NotFound();
+
+            if (extendMonths < 1 || extendMonths > 60)
+            {
+                TempData["ErrorMessage"] = "Thời gian gia hạn bảo hành phải từ 1 đến 60 tháng.";
+                return RedirectToAction(nameof(WarrantyDetails), new { id });
+            }
 
             warranty.EndDate = warranty.EndDate.AddMonths(extendMonths);
             warranty.WarrantyPeriodMonths += extendMonths;
@@ -931,9 +1003,21 @@ namespace CarShowroom.Controllers
             var request = await _context.WarrantyRequests.FindAsync(id);
             if (request == null) return NotFound();
 
+            if (request.Status == WarrantyRequestStatus.HoanThanh || request.Status == WarrantyRequestStatus.TuChoi)
+            {
+                TempData["ErrorMessage"] = "Không thể thay đổi trạng thái khi yêu cầu bảo hành đã Hoàn thành hoặc đã bị Từ chối.";
+                return RedirectToAction(nameof(WarrantyRequestDetails), new { id });
+            }
+
+            if (status == WarrantyRequestStatus.TuChoi && string.IsNullOrWhiteSpace(rejectReason))
+            {
+                TempData["ErrorMessage"] = "Vui lòng nhập lý do từ chối yêu cầu bảo hành.";
+                return RedirectToAction(nameof(WarrantyRequestDetails), new { id });
+            }
+
             request.Status = status;
             if (!string.IsNullOrEmpty(adminNotes)) request.AdminNotes = adminNotes;
-            if (!string.IsNullOrEmpty(rejectReason)) request.RejectReason = rejectReason;
+            if (!string.IsNullOrEmpty(rejectReason)) request.RejectReason = rejectReason.Trim();
             if (!string.IsNullOrEmpty(resultNotes)) request.ResultNotes = resultNotes;
             request.UpdatedAt = DateTime.Now;
 
@@ -996,6 +1080,57 @@ namespace CarShowroom.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AppointmentStart(int id)
+        {
+            var appt = await _context.MaintenanceAppointments.FindAsync(id);
+            if (appt == null) return NotFound();
+
+            if (appt.Status != AppointmentStatus.DaXacNhan)
+            {
+                TempData["ErrorMessage"] = "Chỉ có thể bắt đầu thực hiện khi lịch hẹn đang ở trạng thái 'Đã xác nhận'.";
+                return RedirectToAction(nameof(Appointments));
+            }
+
+            appt.Status = AppointmentStatus.DangThucHien;
+            appt.UpdatedAt = DateTime.Now;
+
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = $"Lịch hẹn '{appt.AppointmentCode}' đã chuyển sang trạng thái Đang thực hiện.";
+            return RedirectToAction(nameof(Appointments));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AppointmentReject(int id, string rejectReason)
+        {
+            var appt = await _context.MaintenanceAppointments.FindAsync(id);
+            if (appt == null) return NotFound();
+
+            if (string.IsNullOrWhiteSpace(rejectReason))
+            {
+                TempData["ErrorMessage"] = "Vui lòng nhập lý do từ chối lịch hẹn.";
+                return RedirectToAction(nameof(Appointments));
+            }
+
+            if (appt.Status == AppointmentStatus.HoanThanh || appt.Status == AppointmentStatus.TuChoi || appt.Status == AppointmentStatus.DaHuy)
+            {
+                TempData["ErrorMessage"] = "Không thể từ chối lịch hẹn đã hoàn thành hoặc đã đóng.";
+                return RedirectToAction(nameof(Appointments));
+            }
+
+            appt.Status = AppointmentStatus.TuChoi;
+            appt.AdminNotes = !string.IsNullOrWhiteSpace(appt.AdminNotes)
+                ? $"{appt.AdminNotes} | Lý do từ chối: {rejectReason.Trim()}"
+                : $"Lý do từ chối: {rejectReason.Trim()}";
+            appt.UpdatedAt = DateTime.Now;
+
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = $"Đã từ chối lịch hẹn '{appt.AppointmentCode}'.";
+            return RedirectToAction(nameof(Appointments));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> AppointmentComplete(int id, decimal actualCost, string? notes)
         {
             var appt = await _context.MaintenanceAppointments
@@ -1004,6 +1139,18 @@ namespace CarShowroom.Controllers
                 .FirstOrDefaultAsync(a => a.Id == id);
 
             if (appt == null) return NotFound();
+
+            if (appt.Status != AppointmentStatus.DaXacNhan && appt.Status != AppointmentStatus.DangThucHien)
+            {
+                TempData["ErrorMessage"] = "Chỉ có thể hoàn thành lịch bảo dưỡng khi đang ở trạng thái 'Đã xác nhận' hoặc 'Đang thực hiện'.";
+                return RedirectToAction(nameof(Appointments));
+            }
+
+            if (actualCost <= 0)
+            {
+                TempData["ErrorMessage"] = "Chi phí thực tế hoàn thành bảo dưỡng phải lớn hơn 0 VNĐ.";
+                return RedirectToAction(nameof(Appointments));
+            }
 
             appt.Status = AppointmentStatus.HoanThanh;
             appt.ActualCost = actualCost;

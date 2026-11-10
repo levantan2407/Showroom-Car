@@ -116,22 +116,43 @@
                                 }
                             </td>
                             <td class="text-end pe-3">
-                                @if (a.Status == AppointmentStatus.ChoXacNhan)
-                                {
-                                    <button class="btn btn-success btn-sm py-0" data-bs-toggle="modal" data-bs-target="#confirmModal_@a.Id">
-                                        <i class="bi bi-check2"></i> Xác nhận
-                                    </button>
-                                }
-                                else if (a.Status == AppointmentStatus.DaXacNhan || a.Status == AppointmentStatus.DangThucHien)
-                                {
-                                    <button class="btn btn-primary btn-sm py-0" data-bs-toggle="modal" data-bs-target="#completeModal_@a.Id">
-                                        <i class="bi bi-check2-all"></i> Hoàn thành
-                                    </button>
-                                }
-                                else
-                                {
-                                    <span class="text-muted small">---</span>
-                                }
+                                <div class="d-inline-flex gap-1 justify-content-end">
+                                    @if (a.Status == AppointmentStatus.ChoXacNhan)
+                                    {
+                                        <button class="btn btn-success btn-sm py-0" data-bs-toggle="modal" data-bs-target="#confirmModal_@a.Id">
+                                            <i class="bi bi-check2"></i> Xác nhận
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-sm py-0" data-bs-toggle="modal" data-bs-target="#rejectModal_@a.Id">
+                                            <i class="bi bi-x"></i> Từ chối
+                                        </button>
+                                    }
+                                    else if (a.Status == AppointmentStatus.DaXacNhan)
+                                    {
+                                        <form asp-action="AppointmentStart" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@a.Id" />
+                                            <button type="submit" class="btn btn-warning btn-sm py-0">
+                                                <i class="bi bi-play-circle"></i> Bắt đầu
+                                            </button>
+                                        </form>
+                                        <button class="btn btn-primary btn-sm py-0" data-bs-toggle="modal" data-bs-target="#completeModal_@a.Id">
+                                            <i class="bi bi-check2-all"></i> Hoàn thành
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-sm py-0" data-bs-toggle="modal" data-bs-target="#rejectModal_@a.Id">
+                                            <i class="bi bi-x"></i> Từ chối
+                                        </button>
+                                    }
+                                    else if (a.Status == AppointmentStatus.DangThucHien)
+                                    {
+                                        <button class="btn btn-primary btn-sm py-0" data-bs-toggle="modal" data-bs-target="#completeModal_@a.Id">
+                                            <i class="bi bi-check2-all"></i> Hoàn thành
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">---</span>
+                                    }
+                                </div>
                             </td>
                         </tr>
 
@@ -146,7 +167,7 @@
                                             <h5 class="modal-title fw-bold">Xác Nhận Lịch Hẹn @a.AppointmentCode</h5>
                                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                                         </div>
-                                        <div class="modal-body p-4">
+                                        <div class="modal-body p-4 text-start">
                                             <p class="small text-muted mb-3">Xác nhận ngày tiếp nhận: <strong>@a.AppointmentDate.ToString("dd/MM/yyyy") (@a.TimeSlot)</strong> cho khách hàng <strong>@(a.Customer?.FullName)</strong></p>
                                             <div class="mb-3">
                                                 <label class="form-label small fw-semibold">Chi phí ước tính (VNĐ)</label>
@@ -160,6 +181,33 @@
                                         <div class="modal-footer">
                                             <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
                                             <button type="submit" class="btn btn-success fw-bold">Xác Nhận Lịch Hẹn</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Modal Reject Appointment -->
+                        <div class="modal fade" id="rejectModal_@a.Id" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content rounded-4 border-0">
+                                    <form asp-action="AppointmentReject" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@a.Id" />
+                                        <div class="modal-header bg-danger text-white">
+                                            <h5 class="modal-title fw-bold"><i class="bi bi-x-circle me-1"></i>Từ Chối Lịch Hẹn @a.AppointmentCode</h5>
+                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body p-4 text-start">
+                                            <p class="small text-muted mb-3">Vui lòng nhập lý do từ chối lịch hẹn bảo dưỡng của khách hàng <strong>@(a.Customer?.FullName)</strong>:</p>
+                                            <div class="mb-3">
+                                                <label class="form-label small fw-semibold">Lý do từ chối <span class="text-danger">*</span></label>
+                                                <textarea name="rejectReason" rows="3" class="form-control" placeholder="Xưởng bảo dưỡng đã kín chỗ trong khung giờ này..." required></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Đóng</button>
+                                            <button type="submit" class="btn btn-danger fw-bold">Xác Nhận Từ Chối</button>
                                         </div>
                                     </form>
                                 </div>
