@@ -30,7 +30,8 @@ var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
     Args = args,
     ContentRootPath = contentRoot,
-    WebRootPath = Directory.Exists(webRoot) ? webRoot : null
+    WebRootPath = Directory.Exists(webRoot) ? webRoot : null,
+    EnvironmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? Environments.Development
 });
 
 // Neu khong co port tu bien moi truong, mac dinh lang nghe tai http://localhost:5201
@@ -109,7 +110,12 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+// Chi chuyen huong HTTPS neu co cong HTTPS duoc cau hinh (tranh canh bao Failed to determine https port khi chay HTTP)
+if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ASPNETCORE_HTTPS_PORT")) || 
+    !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("HTTPS_PORT")))
+{
+    app.UseHttpsRedirection();
+}
 app.UseRouting();
 
 app.UseAuthentication();
