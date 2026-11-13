@@ -29,6 +29,7 @@ namespace CarShowroom.Controllers
 
             var brands = await _context.CarBrands
                 .Where(b => b.IsActive)
+                .OrderBy(b => b.Name)
                 .Take(7)
                 .ToListAsync();
 
