@@ -129,4 +129,18 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
 
+// Tu dong bat trinh duyet (Google Chrome / Trinh duyet mac dinh) ngay khi ung dung khoi dong xong
+app.Lifetime.ApplicationStarted.Register(() =>
+{
+    try
+    {
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = "http://localhost:5201",
+            UseShellExecute = true
+        });
+    }
+    catch { }
+});
+
 app.Run();
