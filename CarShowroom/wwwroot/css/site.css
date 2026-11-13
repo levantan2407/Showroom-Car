@@ -59,7 +59,7 @@ body {
 .navbar-brand-logo {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     font-weight: 800;
     font-size: 1.35rem;
     letter-spacing: -0.5px;
@@ -626,6 +626,13 @@ body {
     padding: 60px 0 25px 0;
     margin-top: auto;
     border-top: 3px solid var(--accent-indigo);
+}
+.footer-custom .navbar-brand-logo {
+    color: #ffffff !important;
+    gap: 8px;
+}
+.footer-custom .navbar-brand-logo .accent {
+    color: var(--primary-blue) !important;
 }
 .footer-custom h5 {
     color: #ffffff;
