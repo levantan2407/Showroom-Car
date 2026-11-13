@@ -3,7 +3,41 @@ using Microsoft.EntityFrameworkCore;
 using CarShowroom.Data;
 using CarShowroom.Models;
 
-var builder = WebApplication.CreateBuilder(args);
+// Tu dong nhan dien dung thu muc ContentRoot va wwwroot du chay bang dotnet run hoac click truc tiep file .exe trong bin\Debug
+var contentRoot = Directory.GetCurrentDirectory();
+var webRoot = Path.Combine(contentRoot, "wwwroot");
+
+if (!Directory.Exists(webRoot))
+{
+    var baseDir = AppContext.BaseDirectory;
+    var binWwwRoot = Path.Combine(baseDir, "wwwroot");
+    var projectWwwRoot = Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "wwwroot"));
+    var projectRoot = Path.GetFullPath(Path.Combine(baseDir, "..", "..", ".."));
+
+    if (Directory.Exists(binWwwRoot))
+    {
+        contentRoot = baseDir;
+        webRoot = binWwwRoot;
+    }
+    else if (Directory.Exists(projectWwwRoot))
+    {
+        contentRoot = projectRoot;
+        webRoot = projectWwwRoot;
+    }
+}
+
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    Args = args,
+    ContentRootPath = contentRoot,
+    WebRootPath = Directory.Exists(webRoot) ? webRoot : null
+});
+
+// Neu khong co port tu bien moi truong, mac dinh lang nghe tai http://localhost:5201
+if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ASPNETCORE_URLS")))
+{
+    builder.WebHost.UseUrls("http://localhost:5201");
+}
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -81,6 +115,7 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.UseStaticFiles();
 app.MapStaticAssets();
 
 app.MapControllerRoute(

@@ -19,6 +19,10 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="wwwroot\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <!-- Tu dong dong tien trinh cu truoc khi build de tranh loi File Locked khi nhan F5 -->
   <Target Name="KillRunningApp" BeforeTargets="BeforeBuild" Condition="'$(OS)' == 'Windows_NT'">
     <Exec Command="taskkill /F /IM CarShowroom.exe 2&gt;nul || exit 0" ContinueOnError="true" />
